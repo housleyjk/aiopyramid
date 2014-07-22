@@ -1,0 +1,78 @@
+###
+# app configuration
+# http://docs.pylonsproject.org/projects/pyramid/en/latest/narr/environment.html
+###
+
+[app:main]
+use = egg:{{project}}
+
+pyramid.reload_templates = true
+pyramid.debug_authorization = false
+pyramid.debug_notfound = false
+pyramid.debug_routematch = false
+pyramid.default_locale_name = en
+pyramid.includes =
+    pyramid_asyncio
+    pyramid_jinja2
+
+
+jinja2.directories = {{project}}:templates/
+jinja2.i18n.domain = {{project}}
+jinja2.filters =
+    model_url = pyramid_jinja2.filters:model_url_filter
+    route_url = pyramid_jinja2.filters:route_url_filter
+    static_url = pyramid_jinja2.filters:static_url_filter
+    route_path = pyramid_jinja2.filters:route_path_filter
+    static_path = pyramid_jinja2.filters:static_path_filter
+
+# By default, the toolbar only appears for clients from IP addresses
+# '127.0.0.1' and '::1'.
+# debugtoolbar.hosts = 127.0.0.1 ::1
+
+###
+# server configuration (This is not exactly wsgi)
+###
+
+[server:main]
+use = egg:gunicorn#main
+host = 0.0.0.0
+port = 6543
+worker_class = pyramid_asyncio.worker.AsyncGunicornWorker
+
+###
+# logging configuration
+# http://docs.pylonsproject.org/projects/pyramid/en/latest/narr/logging.html
+###
+
+[loggers]
+keys = root, asyncio, {{project}}
+
+[handlers]
+keys = console
+
+[formatters]
+keys = generic
+
+[logger_root]
+level = INFO
+handlers = console
+
+[logger_asyncio]
+level = WARN
+handlers =
+qualname = asyncio
+
+[logger_{{project}}]
+level = DEBUG
+handlers =
+qualname = {{project}}
+
+
+[handler_console]
+class = StreamHandler
+args = (sys.stderr,)
+level = NOTSET
+formatter = generic
+
+[formatter_generic]
+format = %(asctime)s %(levelname)-5.5s [%(name)s][%(threadName)s] %(message)s

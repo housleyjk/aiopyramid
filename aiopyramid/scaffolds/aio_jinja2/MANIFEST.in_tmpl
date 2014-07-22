@@ -1,0 +1,2 @@
+include *.txt *.ini *.cfg *.rst LICENSE
+recursive-include {{package}} *.ico *.png *.css *.gif *.jpg *.pt *.txt *.jinja2 *.js *.html *.xml
