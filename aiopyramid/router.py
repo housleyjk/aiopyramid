@@ -4,14 +4,9 @@ asyncio coroutine.
 """
 
 import asyncio
-import inspect
 import logging
 
-from zope.interface import (
-    implementer,
-    providedBy,
-    )
-
+from zope.interface import implementer, providedBy
 from pyramid.interfaces import (
     IRequest,
     IRouteRequest,
@@ -19,27 +14,21 @@ from pyramid.interfaces import (
     ITraverser,
     IView,
     IViewClassifier,
-    ITweens,
-    )
-
+    # ITweens,
+)
 from pyramid.events import (
     ContextFound,
     NewRequest,
     NewResponse,
-    )
-
+)
 from pyramid.exceptions import PredicateMismatch, ConfigurationError
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.settings import aslist
-from pyramid.request import Request
-
-from pyramid.traversal import (
-    ResourceTreeTraverser,
-    )
+from pyramid.traversal import ResourceTreeTraverser
 
 from pyramid.router import Router as RouterBase
 
-from .tweens import excview_tween_factory
+# from .tweens import excview_tween_factory
 
 log = logging.getLogger(__name__)
 
@@ -48,9 +37,8 @@ log = logging.getLogger(__name__)
 class Router(RouterBase):
 
     def __init__(self, config):
-        self.first_route = True
         self.config = config
-        config.registry.registerUtility(excview_tween_factory, ITweens)
+        # config.registry.registerUtility(excview_tween_factory, ITweens)
         super().__init__(config.registry)
 
     @asyncio.coroutine
@@ -84,19 +72,20 @@ class Router(RouterBase):
 
                 if debug_routematch:
                     msg = (
-                        'route matched for url %s; '
-                        'route_name: %r, '
-                        'path_info: %r, '
-                        'pattern: %r, '
-                        'matchdict: %r, '
-                        'predicates: %r' % (
+                        'route matched for url {}; '
+                        'route_name: {}, '
+                        'path_info: {}, '
+                        'pattern: {}, '
+                        'matchdict: {}, '
+                        'predicates: {}'.format(
                             request.url,
                             route.name,
                             request.path_info,
                             route.pattern,
                             match,
-                            ', '.join([p.text() for p in route.predicates]))
+                            ', '.join([p.text() for p in route.predicates])
                         )
+                    )
                     logger and logger.debug(msg)
 
                 request.request_iface = registry.queryUtility(

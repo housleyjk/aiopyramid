@@ -4,14 +4,16 @@ view in order to handle it as a coroutine
 """
 import asyncio
 import inspect
+import warnings
 
-from zope.interface import Interface, implementedBy, implementer
+from zope.interface import Interface, implementedBy
 from zope.interface.interfaces import IInterface
 from pyramid import renderers
-from pyramid.config import Configurator as ConfiguratorBase, global_registries
-from pyramid.config.views import (ViewDeriver as ViewDeriverBase,
-                                  StaticURLInfo as StaticURLInfoBase,
-                                  isexception)
+from pyramid.config import Configurator as global_registries
+from pyramid.config.views import (
+    ViewDeriver as ViewDeriverBase,
+    isexception, MultiView, MAX_ORDER, view_description,
+)
 from pyramid.config.util import DEFAULT_PHASH
 from pyramid.events import ApplicationCreated
 from pyramid.util import action_method, viewdefaults
@@ -19,13 +21,13 @@ from pyramid.response import Response
 from pyramid.compat import string_types, is_nonstr_iter
 from pyramid.registry import predvalseq, Deferred
 from pyramid.exceptions import ConfigurationError
-from pyramid.interfaces import (IDefaultPermission, IRequest, IRouteRequest,
-                                IView, ISecuredView, IMultiView,
-                                IResponse,
-                                IRendererFactory, IViewClassifier,
-                                IExceptionResponse, IExceptionViewClassifier,
-                                )
-from .router import Router, add_exit_handler
+from pyramid.interfaces import (
+    IDefaultPermission, IRequest,
+    IRouteRequest, IView, ISecuredView, IMultiView, IResponse,
+    IRendererFactory, IViewClassifier, IExceptionViewClassifier,
+)
+
+from .router import Router
 
 
 def _is_generator(func):
@@ -35,31 +37,31 @@ def _is_generator(func):
 @viewdefaults
 @action_method
 def add_coroutine_view(
-    config,
-    view=None,
-    name="",
-    for_=None,
-    permission=None,
-    request_type=None,
-    route_name=None,
-    request_method=None,
-    request_param=None,
-    containment=None,
-    attr=None,
-    renderer=None,
-    wrapper=None,
-    xhr=None,
-    accept=None,
-    header=None,
-    path_info=None,
-    custom_predicates=(),
-    context=None,
-    decorator=None,
-    mapper=None,
-    http_cache=None,
-    match_param=None,
-    check_csrf=None,
-    **predicates):
+        config,
+        view=None,
+        name="",
+        for_=None,
+        permission=None,
+        request_type=None,
+        route_name=None,
+        request_method=None,
+        request_param=None,
+        containment=None,
+        attr=None,
+        renderer=None,
+        wrapper=None,
+        xhr=None,
+        accept=None,
+        header=None,
+        path_info=None,
+        custom_predicates=(),
+        context=None,
+        decorator=None,
+        mapper=None,
+        http_cache=None,
+        match_param=None,
+        check_csrf=None,
+        **predicates):
     """ patched version of pyramid add_view that use asyncio coroutine """
     self = config
     if custom_predicates:
@@ -73,7 +75,7 @@ def add_coroutine_view(
              'for more information.'),
             DeprecationWarning,
             stacklevel=4
-            )
+        )
 
     view = self.maybe_dotted(view)
     # transform the view to a coroutine only in case it's really a coroutine
@@ -123,8 +125,10 @@ def add_coroutine_view(
 
     if isinstance(renderer, string_types):
         renderer = renderers.RendererHelper(
-            name=renderer, package=self.package,
-            registry = self.registry)
+            name=renderer,
+            package=self.package,
+            registry=self.registry
+        )
 
     if accept is not None:
         accept = accept.lower()
@@ -144,15 +148,15 @@ def add_coroutine_view(
             match_param=match_param,
             check_csrf=check_csrf,
             custom=predvalseq(custom_predicates),
-            )
         )
+    )
 
     def discrim_func():
         # We need to defer the discriminator until we know what the phash
         # is.  It can't be computed any sooner because thirdparty
         # predicates may not yet exist when add_view is called.
         order, preds, phash = predlist.make(self, **pvals)
-        view_intr.update({'phash':phash, 'order':order, 'predicates':preds})
+        view_intr.update({'phash': phash, 'order': order, 'predicates': preds})
         return ('view', context, name, route_name, phash)
 
     discriminator = Deferred(discrim_func)
@@ -170,24 +174,25 @@ def add_coroutine_view(
                                     view_desc,
                                     'view')
     view_intr.update(
-        dict(name=name,
-             context=context,
-             containment=containment,
-             request_param=request_param,
-             request_methods=request_method,
-             route_name=route_name,
-             attr=attr,
-             xhr=xhr,
-             accept=accept,
-             header=header,
-             path_info=path_info,
-             match_param=match_param,
-             check_csrf=check_csrf,
-             callable=view,
-             mapper=mapper,
-             decorator=decorator,
-             )
+        dict(
+            name=name,
+            context=context,
+            containment=containment,
+            request_param=request_param,
+            request_methods=request_method,
+            route_name=route_name,
+            attr=attr,
+            xhr=xhr,
+            accept=accept,
+            header=header,
+            path_info=path_info,
+            match_param=match_param,
+            check_csrf=check_csrf,
+            callable=view,
+            mapper=mapper,
+            decorator=decorator,
         )
+    )
     view_intr.update(**predicates)
     introspectables.append(view_intr)
     predlist = self.get_predlist('view')
@@ -215,7 +220,7 @@ def add_coroutine_view(
                     name=None,
                     package=self.package,
                     registry=self.registry
-                    )
+                )
 
         if permission is None:
             # intent: will be None if no default permission is registered
@@ -243,7 +248,7 @@ def add_coroutine_view(
             mapper=mapper,
             decorator=decorator,
             http_cache=http_cache,
-            )
+        )
         derived_view = deriver(view)
         derived_view.__discriminator__ = lambda *arg: discriminator
         # __discriminator__ is used by superdynamic systems
@@ -289,7 +294,7 @@ def add_coroutine_view(
             self.registry.registerAdapter(
                 derived_view,
                 (IViewClassifier, request_iface, context), view_iface, name
-                )
+            )
             if isexc:
                 self.registry.registerAdapter(
                     derived_view,
@@ -346,14 +351,14 @@ def add_coroutine_view(
                     multiview,
                     (IExceptionViewClassifier, request_iface, context),
                     IMultiView, name=name)
-        renderer_type = getattr(renderer, 'type', None) # gard against None
+        renderer_type = getattr(renderer, 'type', None)  # guard against None
         intrspc = self.introspector
         if (
             renderer_type is not None and
             tmpl_intr is not None and
             intrspc is not None and
             intrspc.get('renderer factories', renderer_type) is not None
-            ):
+        ):
             # allow failure of registered template factories to be deferred
             # until view execution, like other bad renderer factories; if
             # we tried to relate this to an existing renderer factory
@@ -369,12 +374,12 @@ def add_coroutine_view(
             discriminator,
             'view mapper for %s' % view_desc,
             'view mapper'
-            )
+        )
         mapper_intr['mapper'] = mapper
         mapper_intr.relate('views', discriminator)
         introspectables.append(mapper_intr)
     if route_name:
-        view_intr.relate('routes', route_name) # see add_route
+        view_intr.relate('routes', route_name)  # see add_route
     if renderer is not None and renderer.name and '.' in renderer.name:
         # the renderer is a template
         tmpl_intr = self.introspectable(
@@ -382,7 +387,7 @@ def add_coroutine_view(
             discriminator,
             renderer.name,
             'template'
-            )
+        )
         tmpl_intr.relate('views', discriminator)
         tmpl_intr['name'] = renderer.name
         tmpl_intr['type'] = renderer.type
@@ -395,7 +400,7 @@ def add_coroutine_view(
             permission,
             permission,
             'permission'
-            )
+        )
         perm_intr['value'] = permission
         perm_intr.relate('views', discriminator)
         introspectables.append(perm_intr)
@@ -414,14 +419,13 @@ def make_asyncio_app(config):
     # Push the registry onto the stack in case any code that depends on
     # the registry threadlocal APIs used in listeners subscribed to the
     # IApplicationCreated event.
-    self.manager.push({'registry':self.registry, 'request':None})
+    self.manager.push({'registry': self.registry, 'request': None})
     try:
         self.registry.notify(ApplicationCreated(app))
     finally:
         self.manager.pop()
 
     return app
-
 
 
 class ViewDeriver(ViewDeriverBase):
@@ -433,9 +437,7 @@ class ViewDeriver(ViewDeriverBase):
         def rendered_view(context, request):
 
             renderer = view_renderer
-            result = view(context, request)
-            if _is_generator(result):
-                result = yield from result
+            result = yield from view(context, request)
 
             if result.__class__ is Response:  # potential common case
                 response = result
@@ -466,9 +468,11 @@ class ViewDeriver(ViewDeriverBase):
     def _response_resolved_view(self, view):
         registry = self.registry
 
+        @asyncio.coroutine
         def viewresult_to_response(context, request):
 
             result = yield from view(context, request)
+
             if result.__class__ is Response:  # common case
                 response = result
             else:
