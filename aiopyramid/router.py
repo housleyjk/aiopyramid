@@ -5,6 +5,8 @@ asyncio coroutine.
 
 import asyncio
 import logging
+import aiohttp
+import greenlet
 
 from zope.interface import implementer, providedBy
 from pyramid.interfaces import (
@@ -21,9 +23,8 @@ from pyramid.events import (
     NewRequest,
     NewResponse,
 )
-from pyramid.exceptions import PredicateMismatch, ConfigurationError
+from pyramid.exceptions import PredicateMismatch
 from pyramid.httpexceptions import HTTPNotFound
-from pyramid.settings import aslist
 from pyramid.traversal import ResourceTreeTraverser
 
 from pyramid.router import Router as RouterBase
@@ -31,6 +32,19 @@ from pyramid.router import Router as RouterBase
 # from .tweens import excview_tween_factory
 
 log = logging.getLogger(__name__)
+
+
+@asyncio.coroutine
+def sleeping(me, f):
+    print('before sleep')
+    yield from asyncio.sleep(2)
+    response = yield from aiohttp.request('GET', 'http://python.org/doc/')
+    body = yield from response.read_and_close()
+    # body is a byterray !
+    f.set_result(body)
+    print('switching back')
+    me.switch()
+    print('never seen')
 
 
 @implementer(IRouter)
@@ -111,7 +125,7 @@ class Router(RouterBase):
             tdict['traversed'],
             tdict['virtual_root'],
             tdict['virtual_root_path']
-            )
+        )
 
         attrs.update(tdict)
         has_listeners and notify(ContextFound(request))
@@ -133,7 +147,7 @@ class Router(RouterBase):
                         request.url, request.path_info, context,
                         view_name, subpath, traversed, root, vroot,
                         vroot_path)
-                    )
+                )
                 logger and logger.debug(msg)
             else:
                 msg = request.path_info
@@ -215,7 +229,6 @@ class Router(RouterBase):
         finally:
             manager.pop()
 
-    @asyncio.coroutine
     def __call__(self, environ, start_response):
         """
         Accept ``environ`` and ``start_response``; create a
@@ -224,39 +237,14 @@ class Router(RouterBase):
         within the application registry; call ``start_response`` and
         return an iterable.
         """
-        request = self.request_factory(environ)
-        response = yield from self.invoke_subrequest(request, use_tweens=True)
+        #request = self.request_factory(environ)
+        #response = yield from self.invoke_subrequest(request, use_tweens=True)
 
-        response = response(request.environ, start_response)
-        return response
-
-    exit_handlers = []
-
-    @asyncio.coroutine
-    def open(self):
-        settings = self.config.get_settings()
-        aioincludes = aslist(settings.get('asyncio.includes', ''))
-
-        for callable in aioincludes:
-            try:
-
-                module = self.config.maybe_dotted(callable)
-                try:
-                    includeme = getattr(module, 'includeme')
-                except AttributeError:
-                    raise ConfigurationError(
-                        "module %r has no attribute 'includeme'" % (module.__name__)
-                        )
-
-                yield from includeme(self.config)
-            except Exception:
-                log.exception('{} raise an exception'.format(includeme))
-
-    @asyncio.coroutine
-    def close(self):
-        for handler in self.exit_handlers:
-            yield from handler()
-
-
-def add_exit_handler(config, handler):
-    Router.exit_handlers.append(handler)
+        #response = response(request.environ, start_response)
+        start_response('200 OK', [('Content-Type','text/html')])
+        myself = greenlet.getcurrent()
+        future = asyncio.Future()
+        asyncio.Task(sleeping(myself, future))
+        myself.parent.switch()
+        # this time we use yield, just for fun...
+        return bytes(future.result())       #return response

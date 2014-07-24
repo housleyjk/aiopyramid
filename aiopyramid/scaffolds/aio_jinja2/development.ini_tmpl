@@ -12,9 +12,8 @@ pyramid.debug_notfound = false
 pyramid.debug_routematch = false
 pyramid.default_locale_name = en
 pyramid.includes =
-    pyramid_asyncio
+    aiopyramid
     pyramid_jinja2
-
 
 jinja2.directories = {{project}}:templates/
 jinja2.i18n.domain = {{project}}
@@ -32,12 +31,6 @@ jinja2.filters =
 ###
 # server configuration (This is not exactly wsgi)
 ###
-
-[server:main]
-use = egg:gunicorn#main
-host = 0.0.0.0
-port = 6543
-worker_class = pyramid_asyncio.worker.AsyncGunicornWorker
 
 ###
 # logging configuration

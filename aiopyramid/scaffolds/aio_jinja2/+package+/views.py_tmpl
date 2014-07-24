@@ -1,6 +1,6 @@
 import asyncio
 from pyramid.response import Response
-from pyramid_asyncio.view import coroutine_view_config
+from aiopyramid.view import coroutine_view_config
 
 
 @coroutine_view_config(route_name='say_hello', renderer='hello.jinja2')

@@ -9,7 +9,7 @@ import warnings
 from zope.interface import Interface, implementedBy
 from zope.interface.interfaces import IInterface
 from pyramid import renderers
-from pyramid.config import Configurator as global_registries
+from pyramid.config import global_registries
 from pyramid.config.views import (
     ViewDeriver as ViewDeriverBase,
     isexception, MultiView, MAX_ORDER, view_description,

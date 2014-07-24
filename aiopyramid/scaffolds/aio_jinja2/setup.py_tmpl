@@ -19,7 +19,7 @@ requires = [
     'pyramid',
     'gunicorn',
     'aiohttp',
-    'pyramid_jinja2',
+    'aiopyramid',
     ]
 
 setup(name=NAME,
