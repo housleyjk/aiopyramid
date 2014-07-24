@@ -25,7 +25,7 @@ if py_version < (3, 4):
 
 setup(
     name='aiopyramid',
-    version='0.0.1',
+    version='0.0.2',
     description='Run pyramid using asyncio.',
     long_description=README + '\n\n' + CHANGES,
     classifiers=[
