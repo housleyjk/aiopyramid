@@ -10,25 +10,20 @@ import greenlet
 from zope.interface import Interface, implementedBy
 from zope.interface.interfaces import IInterface
 from pyramid import renderers
-from pyramid.config import global_registries
 from pyramid.config.views import (
     ViewDeriver as ViewDeriverBase,
-    isexception, MultiView, MAX_ORDER, view_description,
+    isexception, MultiView, MAX_ORDER,
 )
 from pyramid.config.util import DEFAULT_PHASH
-from pyramid.events import ApplicationCreated
 from pyramid.util import action_method, viewdefaults
-from pyramid.response import Response
 from pyramid.compat import string_types, is_nonstr_iter
 from pyramid.registry import predvalseq, Deferred
 from pyramid.exceptions import ConfigurationError
 from pyramid.interfaces import (
     IDefaultPermission, IRequest,
-    IRouteRequest, IView, ISecuredView, IMultiView, IResponse,
+    IRouteRequest, IView, ISecuredView, IMultiView,
     IRendererFactory, IViewClassifier, IExceptionViewClassifier,
 )
-
-from .router import Router
 
 
 def _is_generator(func):
@@ -72,6 +67,14 @@ def add_coroutine_view(
         **predicates):
     """ patched version of pyramid add_view that uses asyncio coroutine """
     self = config
+
+    if not asyncio.iscoroutinefunction(view) and _is_generator(view):
+        view = asyncio.coroutine(view)
+
+    # XXX: We need to copy so much boilerplate because we need to ensure that our ViewDeriver
+    # class gets used rather than the default
+    # TODO: see if we need to override derive_view()
+
     if custom_predicates:
         warnings.warn(
             ('The "custom_predicates" argument to Configurator.add_view '
@@ -87,8 +90,6 @@ def add_coroutine_view(
 
     view = self.maybe_dotted(view)
     # transform the view to a coroutine only in case it's really a coroutine
-    if not asyncio.iscoroutinefunction(view) and _is_generator(view):
-        view = asyncio.coroutine(view)
 
     context = self.maybe_dotted(context)
     for_ = self.maybe_dotted(for_)
