@@ -17,7 +17,6 @@ with open(os.path.join(here, 'CHANGES.rst')) as changes:
 requires = [
     'pyramid',
     'greenlet',
-    'aiohttp',
 ]
 
 if py_version < (3, 4):

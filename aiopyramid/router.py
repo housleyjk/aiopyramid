@@ -5,7 +5,6 @@ asyncio coroutine.
 
 import asyncio
 import logging
-import aiohttp
 import greenlet
 
 from zope.interface import implementer, providedBy
@@ -35,16 +34,19 @@ log = logging.getLogger(__name__)
 
 
 @asyncio.coroutine
+def lift():
+    return "lift"
+
+
+@asyncio.coroutine
 def sleeping(me, f):
     print('before sleep')
-    yield from asyncio.sleep(2)
-    response = yield from aiohttp.request('GET', 'http://python.org/doc/')
-    body = yield from response.read_and_close()
+    body = yield from lift()
     # body is a byterray !
     f.set_result(body)
     print('switching back')
     me.switch()
-    print('never seen')
+    print('post response')
 
 
 @implementer(IRouter)
@@ -241,10 +243,8 @@ class Router(RouterBase):
         #response = yield from self.invoke_subrequest(request, use_tweens=True)
 
         #response = response(request.environ, start_response)
-        start_response('200 OK', [('Content-Type','text/html')])
         myself = greenlet.getcurrent()
         future = asyncio.Future()
         asyncio.Task(sleeping(myself, future))
         myself.parent.switch()
-        # this time we use yield, just for fun...
-        return bytes(future.result())       #return response
+        return bytes(future.result(), 'utf-8')       #return response
