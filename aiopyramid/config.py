@@ -5,6 +5,7 @@ view in order to handle it as a coroutine
 import asyncio
 import inspect
 import warnings
+import greenlet
 
 from zope.interface import Interface, implementedBy
 from zope.interface.interfaces import IInterface
@@ -32,6 +33,13 @@ from .router import Router
 
 def _is_generator(func):
     return isinstance(func, asyncio.Future) or inspect.isgenerator(func)
+
+
+@asyncio.coroutine
+def run_in_greenlet(back, future, view, *args):
+    response = yield from view(*args)
+    future.set_result(response)
+    back.switch()
 
 
 @viewdefaults
@@ -62,7 +70,7 @@ def add_coroutine_view(
         match_param=None,
         check_csrf=None,
         **predicates):
-    """ patched version of pyramid add_view that use asyncio coroutine """
+    """ patched version of pyramid add_view that uses asyncio coroutine """
     self = config
     if custom_predicates:
         warnings.warn(
@@ -407,92 +415,28 @@ def add_coroutine_view(
     self.action(discriminator, register, introspectables=introspectables)
 
 
-def make_asyncio_app(config):
-    self = config
-    self.commit()
-    app = Router(self)
-
-    # Allow tools like "pshell development.ini" to find the 'last'
-    # registry configured.
-    global_registries.add(self.registry)
-
-    # Push the registry onto the stack in case any code that depends on
-    # the registry threadlocal APIs used in listeners subscribed to the
-    # IApplicationCreated event.
-    self.manager.push({'registry': self.registry, 'request': None})
-    try:
-        self.registry.notify(ApplicationCreated(app))
-    finally:
-        self.manager.pop()
-
-    return app
-
-
 class ViewDeriver(ViewDeriverBase):
 
-    def _rendered_view(self, view, view_renderer):
-        """ Render an async view """
+    def __call__(self, view):
+        return self.attr_wrapped_view(
+            self.predicated_view(
+                self.authdebug_view(
+                    self.secured_view(
+                        self.owrapped_view(
+                            self.http_cached_view(
+                                self.decorated_view(
+                                    self.rendered_view(
+                                        self.execute_coroutine_view(
+                                            self.mapped_view(
+                                                view))))))))))
 
-        @asyncio.coroutine
-        def rendered_view(context, request):
+    def execute_coroutine_view(self, view):
 
-            renderer = view_renderer
-            result = yield from view(context, request)
+        def executed_coroutine_view(*args):
+            this = greenlet.getcurrent()
+            future = asyncio.Future()
+            asyncio.async(run_in_greenlet(this, future, view, *args))
+            this.parent.switch()
+            return future.result()
 
-            if result.__class__ is Response:  # potential common case
-                response = result
-            else:
-                registry = self.registry
-                # this must adapt, it can't do a simple interface check
-                # (avoid trying to render webob responses)
-                response = registry.queryAdapterOrSelf(result, IResponse)
-                if response is None:
-                    attrs = getattr(request, '__dict__', {})
-                    if 'override_renderer' in attrs:
-                        # renderer overridden by newrequest event or other
-                        renderer_name = attrs.pop('override_renderer')
-                        renderer = renderers.RendererHelper(
-                            name=renderer_name,
-                            package=self.kw.get('package'),
-                            registry=registry)
-                    if '__view__' in attrs:
-                        view_inst = attrs.pop('__view__')
-                    else:
-                        view_inst = getattr(view, '__original_view__', view)
-                    response = renderer.render_view(request, result, view_inst,
-                                                    context)
-            return response
-
-        return rendered_view
-
-    def _response_resolved_view(self, view):
-        registry = self.registry
-
-        @asyncio.coroutine
-        def viewresult_to_response(context, request):
-
-            result = yield from view(context, request)
-
-            if result.__class__ is Response:  # common case
-                response = result
-            else:
-                response = registry.queryAdapterOrSelf(result, IResponse)
-                if response is None:
-                    if result is None:
-                        append = (' You may have forgotten to return a value '
-                                  'from the view callable.')
-                    elif isinstance(result, dict):
-                        append = (' You may have forgotten to define a '
-                                  'renderer in the view configuration.')
-                    else:
-                        append = ''
-
-                    msg = ('Could not convert return value of the view '
-                           'callable %s into a response object. '
-                           'The value returned was %r.' + append)
-
-                    raise ValueError(msg % (view_description(view), result))
-
-            return response
-
-        return viewresult_to_response
+        return executed_coroutine_view
