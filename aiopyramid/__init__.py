@@ -1,7 +1,6 @@
 """
 Run pyramid app using asyncio
 """
-
 from .config import add_coroutine_view
 
 

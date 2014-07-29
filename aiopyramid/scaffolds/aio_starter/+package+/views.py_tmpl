@@ -1,0 +1,8 @@
+import asyncio
+from aiopyramid.view import coroutine_view_config
+
+
+@coroutine_view_config(route_name='say_hello', renderer='string')
+def say_hello(request):
+    yield from asyncio.sleep(1)
+    return "hello"

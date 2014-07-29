@@ -26,15 +26,15 @@ from pyramid.interfaces import (
 )
 
 
-def _is_generator(func):
-    return isinstance(func, asyncio.Future) or inspect.isgenerator(func)
-
-
 @asyncio.coroutine
-def run_in_greenlet(back, future, view, *args):
-    response = yield from view(*args)
+def run_in_greenlet(back, future, func, *args):
+    response = yield from func(*args)
     future.set_result(response)
     back.switch()
+
+
+def _is_generator(func):
+    return isinstance(func, asyncio.Future) or inspect.isgenerator(func)
 
 
 @viewdefaults
@@ -71,8 +71,8 @@ def add_coroutine_view(
     if not asyncio.iscoroutinefunction(view) and _is_generator(view):
         view = asyncio.coroutine(view)
 
-    # XXX: We need to copy so much boilerplate because we need to ensure that our ViewDeriver
-    # class gets used rather than the default
+    # XXX: We need to copy so much boilerplate because we need to ensure
+    # that our ViewDeriver class gets used rather than the default
     # TODO: see if we need to override derive_view()
 
     if custom_predicates:

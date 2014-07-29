@@ -5,7 +5,8 @@ class coroutine_view_config(object):
     """
     A patched version of view_config that use coroutine for views
     """
-    venusian = venusian # for testing injection
+    venusian = venusian  # for testing injection
+
     def __init__(self, **settings):
         if 'for_' in settings:
             if settings.get('context') is None:
@@ -30,5 +31,5 @@ class coroutine_view_config(object):
             if settings.get('attr') is None:
                 settings['attr'] = wrapped.__name__
 
-        settings['_info'] = info.codeinfo # fbo "action_method"
+        settings['_info'] = info.codeinfo  # fbo "action_method"
         return wrapped

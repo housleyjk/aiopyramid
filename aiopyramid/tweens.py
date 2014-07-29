@@ -1,52 +1,51 @@
+import greenlet
 import asyncio
-import sys
+import logging
 
-from pyramid.interfaces import (
-    IExceptionViewClassifier,
-    IRequest,
-    IView,
-    )
+log = logging.getLogger(__name__)
 
-from zope.interface import providedBy
 
-def excview_tween_factory(handler, registry):
-    """ a tween_factory that support coroutine """
-    adapters = registry.adapters
+def coroutine_logger_tween_factory(handler, registry):
+    """
+    Example of an asyncronous tween.
+    This tween asyncronously logs all requests and responses.
+    """
 
     @asyncio.coroutine
-    def excview_tween(request):
-        attrs = request.__dict__
-        try:
-            response = yield from handler(request)
-        except Exception as exc:
-            # WARNING: do not assign the result of sys.exc_info() to a local
-            # var here, doing so will cause a leak.  We used to actually
-            # explicitly delete both "exception" and "exc_info" from ``attrs``
-            # in a ``finally:`` clause below, but now we do not because these
-            # attributes are useful to upstream tweens.  This actually still
-            # apparently causes a reference cycle, but it is broken
-            # successfully by the garbage collector (see
-            # https://github.com/Pylons/pyramid/issues/1223).
-            attrs['exc_info'] = sys.exc_info()
-            attrs['exception'] = exc
-            # clear old generated request.response, if any; it may
-            # have been mutated by the view, and its state is not
-            # sane (e.g. caching headers)
-            if 'response' in attrs:
-                del attrs['response']
-            # we use .get instead of .__getitem__ below due to
-            # https://github.com/Pylons/pyramid/issues/700
-            request_iface = attrs.get('request_iface', IRequest)
-            provides = providedBy(exc)
-            for_ = (IExceptionViewClassifier, request_iface.combined, provides)
-            view_callable = adapters.lookup(for_, IView, default=None)
-            if view_callable is None:
-                raise
-            if asyncio.iscoroutinefunction(view_callable):
-                response = yield from view_callable(exc, request)
-            else:
-                response = view_callable(exc, request)
+    def _async_log(back, content):
+        # log doesn't really need to be run in a separate thread
+        # but it works for demonstration purposes
+        yield from asyncio.get_event_loop().run_in_executor(
+            None,
+            log.info,
+            content
+        )
+        back.switch()
 
+    def coroutine_logger_tween(request):
+        # get this greenlet
+        this = greenlet.getcurrent()
+
+        # queue request logging
+        asyncio.async(_async_log(this, request))
+
+        # switch to parent so that aio loop runs
+        this.parent.switch()
+
+        # when request is logged, it will switch back to this
+
+        # get response syncronously
+        response = handler(request)
+
+        # queue respone logging
+        asyncio.async(_async_log(this, response))
+
+        # switch to parent so that aio loop runs
+        this.parent.switch()
+
+        # when response is logged, it will switch back to this
+
+        # return response after logging is done
         return response
 
-    return excview_tween
+    return coroutine_logger_tween
