@@ -45,11 +45,15 @@ class AsyncioMapperBase(DefaultViewMapper):
                 run_in_greenlet(
                     this,
                     future,
-                    asyncio.get_event_loop().run_in_executor, None, view, *args
+                    asyncio.get_event_loop().run_in_executor,
+                    None,
+                    view,
+                    *args
                 )
             )
             this.parent.switch()
             return future.result()
+        return executor_view
 
 
 class CoroutineMapper(AsyncioMapperBase):
