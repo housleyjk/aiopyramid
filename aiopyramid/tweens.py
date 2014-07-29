@@ -34,7 +34,7 @@ def coroutine_logger_tween_factory(handler, registry):
 
         # when request is logged, it will switch back to this
 
-        # get response syncronously
+        # get response, this could also be done in a coroutine
         response = handler(request)
 
         # queue respone logging
