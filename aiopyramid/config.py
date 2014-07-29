@@ -76,13 +76,14 @@ class ExecutorMapper(AsyncioMapperBase):
 class CoroutineOrExecutorMapper(AsyncioMapperBase):
 
     def __call__(self, view):
-        view = super().__call__(view)
 
         if asyncio.iscoroutinefunction(view):
-            view = self.run_in_coroutine_view(view)
+            wrapper = self.run_in_coroutine_view
         elif _is_generator(view):
             view = asyncio.coroutine(view)
-            view = self.run_in_coroutine_view(view)
+            wrapper = self.run_in_coroutine_view
         else:
-            view = self.run_in_executor_view(view)
-        return view
+            wrapper = self.run_in_executor_view
+
+        view = super().__call__(view)
+        return wrapper(view)
