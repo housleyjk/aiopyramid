@@ -2,6 +2,8 @@
 Run pyramid app using asyncio
 """
 
+from .config import CoroutineOrExecutorMapper
+
 
 def includeme(config):
-    pass
+    config.set_view_mapper(CoroutineOrExecutorMapper)

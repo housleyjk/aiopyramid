@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 py_version = sys.version_info[:2]
 if py_version < (3, 3):
-    raise Exception("websockets requires Python >= 3.3.")
+    raise Exception("aiopyramid requires Python >= 3.3.")
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -24,8 +24,8 @@ if py_version < (3, 4):
 
 setup(
     name='aiopyramid',
-    version='0.0.2',
-    description='Run pyramid using asyncio.',
+    version='0.0.3',
+    description='Tools for running pyramid using asyncio.',
     long_description=README + '\n\n' + CHANGES,
     classifiers=[
         "Programming Language :: Python",

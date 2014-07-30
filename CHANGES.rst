@@ -1,5 +1,12 @@
 .. :changelog:
 
+0.0.3 (2014-07-30)
+++++++++++++++++++
+    - Moving to an extension-based rather than patched-based approach
+    - removed most code based on pyramid_asyncio except testing and scaffolds
+    - added view mappers for running views in asyncio
+    - added example tween that can come before or after syncronous tweens
+
 0.0.2 (2014-07-22)
 ++++++++++++++++++
     - Removed Gunicorn specific code

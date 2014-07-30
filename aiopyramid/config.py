@@ -1,12 +1,12 @@
 """
-This code is a big copy/paste of code from pyramid and change the
-view in order to handle it as a coroutine
+This module provides view mappers for running views in asyncio.
 """
 import asyncio
 import inspect
 
 import greenlet
 from pyramid.config.views import DefaultViewMapper
+from pyramid.exceptions import ConfigurationError
 
 
 @asyncio.coroutine
@@ -63,16 +63,20 @@ class AsyncioMapperBase(DefaultViewMapper):
 class CoroutineMapper(AsyncioMapperBase):
 
     def __call__(self, view):
-        view = super().__call__(view)
         if not asyncio.iscoroutinefunction(view) and _is_generator(view):
             view = asyncio.coroutine(view)
-            view = self.run_in_coroutine_view(view)
-        return view
+        else:
+            raise ConfigurationError('Non-coroutine {} mapped to coroutine.'.format(view))
+
+        view = super().__call__(view)
+        return self.run_in_coroutine_view(view)
 
 
 class ExecutorMapper(AsyncioMapperBase):
 
     def __call__(self, view):
+        if asyncio.iscoroutinefunction(view) or _is_generator(view):
+            raise ConfigurationError('Coroutine {} mapped to executor.'.format(view))
         view = super().__call__(view)
         return self.run_in_executor_view(view)
 
