@@ -12,6 +12,8 @@ pyramid.debug_notfound = false
 pyramid.debug_routematch = false
 pyramid.default_locale_name = en
 
+logging.config = %(here)s/development.ini
+
 [uwsgi]
 http-socket = 0.0.0.0:6543
 
