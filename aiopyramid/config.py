@@ -17,7 +17,11 @@ def run_in_greenlet(back, future, func, *args):
 
 
 def _is_generator(func):
-    return isinstance(func, asyncio.Future) or inspect.isgenerator(func)
+    return (
+        inspect.isgeneratorfunction(func) or
+        isinstance(func, asyncio.Future) or
+        inspect.isgenerator(func)
+    )
 
 
 class AsyncioMapperBase(DefaultViewMapper):
