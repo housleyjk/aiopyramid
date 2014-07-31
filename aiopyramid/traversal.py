@@ -1,5 +1,6 @@
 import asyncio
 
+import greenlet
 from pyramid.traversal import (
     ResourceTreeTraverser as TraverserBase,
     is_nonstr_iter,
@@ -9,7 +10,73 @@ from pyramid.exceptions import URLDecodeError
 from pyramid.interfaces import VH_ROOT_KEY
 from pyramid.compat import decode_path_info
 
+from .helpers import run_in_greenlet
+
 SLASH = "/"
+
+
+@asyncio.coroutine
+def traverse(
+    i,
+    ob,
+    view_selector,
+    vpath_tuple,
+    vroot_idx,
+    vroot,
+    vroot_tuple,
+    root,
+    subpath,
+):
+    for segment in vpath_tuple:
+        if segment[:2] == view_selector:
+            return {
+                'context': ob,
+                'view_name': segment[2:],
+                'subpath': vpath_tuple[i + 1:],
+                'traversed': vpath_tuple[:vroot_idx + i + 1],
+                'virtual_root': vroot,
+                'virtual_root_path': vroot_tuple,
+                'root': root,
+            }
+        try:
+            getitem = ob.__getitem__
+        except AttributeError:
+            return {
+                'context': ob,
+                'view_name': segment,
+                'subpath': vpath_tuple[i + 1:],
+                'traversed': vpath_tuple[:vroot_idx + i + 1],
+                'virtual_root': vroot,
+                'virtual_root_path': vroot_tuple,
+                'root': root,
+            }
+
+        try:
+            next = yield from getitem(segment)
+        except KeyError:
+            return {
+                'context': ob,
+                'view_name': segment,
+                'subpath': vpath_tuple[i + 1:],
+                'traversed': vpath_tuple[:vroot_idx + i + 1],
+                'virtual_root': vroot,
+                'virtual_root_path': vroot_tuple,
+                'root': root,
+            }
+        if i == vroot_idx:
+            vroot = next
+        ob = next
+        i += 1
+
+    return {
+        'context': ob,
+        'view_name': "",
+        'subpath': subpath,
+        'traversed': vpath_tuple,
+        'virtual_root': vroot,
+        'virtual_root_path': vroot_tuple,
+        'root': root
+    }
 
 
 class AsyncioTraverser(TraverserBase):
@@ -65,51 +132,33 @@ class AsyncioTraverser(TraverserBase):
         root = self.root
         ob = vroot = root
 
-        if vpath == SLASH:  # invariant: vpath must not be empty
-            # prevent a call to traversal_path if we know it's going
-            # to return the empty tuple
+        if vpath == SLASH:
             vpath_tuple = ()
         else:
-            # we do dead reckoning here via tuple slicing instead of
-            # pushing and popping temporary lists for speed purposes
-            # and this hurts readability; apologies
             i = 0
             view_selector = self.VIEW_SELECTOR
             vpath_tuple = split_path_info(vpath)
-            for segment in vpath_tuple:
-                if segment[:2] == view_selector:
-                    return {'context': ob,
-                            'view_name': segment[2:],
-                            'subpath': vpath_tuple[i + 1:],
-                            'traversed': vpath_tuple[:vroot_idx + i + 1],
-                            'virtual_root': vroot,
-                            'virtual_root_path': vroot_tuple,
-                            'root': root}
-                try:
-                    getitem = ob.__getitem__
-                except AttributeError:
-                    return {'context': ob,
-                            'view_name': segment,
-                            'subpath': vpath_tuple[i + 1:],
-                            'traversed': vpath_tuple[:vroot_idx + i + 1],
-                            'virtual_root': vroot,
-                            'virtual_root_path': vroot_tuple,
-                            'root': root}
 
-                try:
-                    next = getitem(segment)
-                except KeyError:
-                    return {'context': ob,
-                            'view_name': segment,
-                            'subpath': vpath_tuple[i + 1:],
-                            'traversed': vpath_tuple[:vroot_idx + i + 1],
-                            'virtual_root': vroot,
-                            'virtual_root_path': vroot_tuple,
-                            'root': root}
-                if i == vroot_idx:
-                    vroot = next
-                ob = next
-                i += 1
+            this = greenlet.getcurrent()
+            future = asyncio.Future()
+            asyncio.async(
+                run_in_greenlet(
+                    this,
+                    future,
+                    traverse,
+                    i,
+                    ob,
+                    view_selector,
+                    vpath_tuple,
+                    vroot_idx,
+                    vroot,
+                    vroot_tuple,
+                    root,
+                    subpath,
+                )
+            )
+            this.parent.switch()
+            return future.result()
 
         return {
             'context': ob,

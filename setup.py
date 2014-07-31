@@ -46,9 +46,12 @@ setup(
     zip_safe=False,
     test_suite='aiopyramid',
     install_requires=requires,
+    extras_require={
+        'gunicorn': ['gunicorn', 'aiohttp'],
+    },
     license="BSD-derived (http://www.repoze.org/LICENSE.txt)",
     entry_points="""\
     [pyramid.scaffold]
-    aio_jinja2=aiopyramid.scaffolds:AioJinja2Template
+    aio_starter=aiopyramid.scaffolds:AioStarterTemplate
     """
 )

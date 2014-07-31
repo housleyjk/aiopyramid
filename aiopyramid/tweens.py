@@ -15,6 +15,11 @@ def coroutine_logger_tween_factory(handler, registry):
     def _async_log(back, content):
         # log doesn't really need to be run in a separate thread
         # but it works for demonstration purposes
+        # NOTE: this does not do exception handling, which means
+        # that no 500 error view will be run. The exception needs to
+        # be reraised in the request greenlet. See helpers.run_in_greenlet for
+        # and example.
+
         yield from asyncio.get_event_loop().run_in_executor(
             None,
             log.info,

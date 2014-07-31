@@ -8,12 +8,7 @@ import greenlet
 from pyramid.config.views import DefaultViewMapper
 from pyramid.exceptions import ConfigurationError
 
-
-@asyncio.coroutine
-def run_in_greenlet(back, future, func, *args):
-    response = yield from func(*args)
-    future.set_result(response)
-    back.switch()
+from .helpers import run_in_greenlet
 
 
 def _is_generator(func):
