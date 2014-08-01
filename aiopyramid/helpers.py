@@ -17,11 +17,6 @@ def spawn_greenlet(func, *args):
     g = greenlet.greenlet(func)
     result = g.switch(*args)
     while True:
-        if not result:
-            raise ValueError(
-                'You must pass a asyncio.Future or an interator '
-                'to the parent greenlet when using gunicorn'
-            )
         if isinstance(result, asyncio.Future):
             result = yield from result
         else:

@@ -17,11 +17,11 @@ class AsyncioMapperBase(DefaultViewMapper):
 
     def run_in_coroutine_view(self, view):
 
-        def coroutine_view(*args):
+        def coroutine_view(context, request):
             this = greenlet.getcurrent()
             future = asyncio.Future()
             sub_task = asyncio.async(
-                run_in_greenlet(this, future, view, *args)
+                run_in_greenlet(this, future, view, context, request)
             )
             this.parent.switch(sub_task)
             return future.result()
@@ -30,21 +30,27 @@ class AsyncioMapperBase(DefaultViewMapper):
 
     def run_in_executor_view(self, view):
 
-        def executor_view(*args):
-            this = greenlet.getcurrent()
-            future = asyncio.Future()
-            sub_task = asyncio.async(
-                run_in_greenlet(
-                    this,
-                    future,
-                    asyncio.get_event_loop().run_in_executor,
-                    None,
-                    view,
-                    *args
+        def executor_view(context, request):
+            try:
+                # since we are running in a new thread,
+                # remove the old wsgi.file_wrapper for uwsgi
+                request.environ.pop('wsgi.file_wrapper')
+            finally:
+                this = greenlet.getcurrent()
+                future = asyncio.Future()
+                sub_task = asyncio.async(
+                    run_in_greenlet(
+                        this,
+                        future,
+                        asyncio.get_event_loop().run_in_executor,
+                        None,
+                        view,
+                        context,
+                        request,
+                    )
                 )
-            )
-            this.parent.switch(sub_task)
-            return future.result()
+                this.parent.switch(sub_task)
+                return future.result()
         return executor_view
 
 
@@ -54,7 +60,9 @@ class CoroutineMapper(AsyncioMapperBase):
         if not asyncio.iscoroutinefunction(view) and is_generator(view):
             view = asyncio.coroutine(view)
         else:
-            raise ConfigurationError('Non-coroutine {} mapped to coroutine.'.format(view))
+            raise ConfigurationError(
+                'Non-coroutine {} mapped to coroutine.'.format(view)
+            )
 
         view = super().__call__(view)
         return self.run_in_coroutine_view(view)
@@ -64,7 +72,9 @@ class ExecutorMapper(AsyncioMapperBase):
 
     def __call__(self, view):
         if asyncio.iscoroutinefunction(view) or is_generator(view):
-            raise ConfigurationError('Coroutine {} mapped to executor.'.format(view))
+            raise ConfigurationError(
+                'Coroutine {} mapped to executor.'.format(view)
+            )
         view = super().__call__(view)
         return self.run_in_executor_view(view)
 

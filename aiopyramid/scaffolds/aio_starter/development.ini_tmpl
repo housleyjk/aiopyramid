@@ -11,16 +11,24 @@ pyramid.debug_authorization = false
 pyramid.debug_notfound = false
 pyramid.debug_routematch = false
 pyramid.default_locale_name = en
+pyramid.includes =
+    aiopyramid
 
+# for py3
 logging.config = %(here)s/development.ini
 
 [uwsgi]
 http-socket = 0.0.0.0:6543
+workers = 1
+plugins =
+    asyncio = 50 ;number of workers
+    greenlet
 
-###
-# logging configuration
-# http://docs.pylonsproject.org/projects/pyramid/en/latest/narr/logging.html
-###
+[server:main]
+use = egg:gunicorn#main
+host = 0.0.0.0
+port = 6543
+worker_class = aiopyramid.gunicorn.worker.AsyncGunicornWorker
 
 [loggers]
 keys = root, asyncio, {{project}}

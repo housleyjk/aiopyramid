@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 py_version = sys.version_info[:2]
 if py_version < (3, 3):
-    raise Exception("websockets requires Python >= 3.3.")
+    raise Exception("aiopyramid requires Python >= 3.3.")
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -35,7 +35,7 @@ setup(
     author='',
     author_email='',
     url='',
-    keywords='web wsgi bfg pylons pyramid',
+    keywords='asyncio web wsgi pylons pyramid',
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,

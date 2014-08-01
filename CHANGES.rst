@@ -1,5 +1,13 @@
 .. :changelog:
 
+0.1.0 (2014-08-01)
+++++++++++++++++++
+    - Update README ready for release
+    - Added asyncio traverser (patched from `ResourceTreeTraverser`)
+    - Added custom gunicorn worker
+    - Fix issue with uwsgi and executor threads
+    - Update starter scaffold
+
 0.0.3 (2014-07-30)
 ++++++++++++++++++
     - Moving to an extension-based rather than patched-based approach
@@ -17,6 +25,6 @@
 0.0.1 (2014-07-22)
 ++++++++++++++++++
     - Migrated from pyramid_asyncio (Thank you Guillaume)
-        - Removed worker.py and Gunicorn dependency
-        - Added greenlet dependency
-        - Changed contact information in setup.py
+    - Removed worker.py and Gunicorn dependency
+    - Added greenlet dependency
+    - Changed contact information in setup.py
