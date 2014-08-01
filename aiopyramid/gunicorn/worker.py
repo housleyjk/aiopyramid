@@ -1,20 +1,62 @@
 import asyncio
+import time
+import io
 
-from greenlet import greenlet
-from aiohttp.worker import AsyncGunicornWorker as BaseWorker
+from gunicorn.workers.gaiohttp import AiohttpWorker
+from aiohttp.wsgi import WSGIServerHttpProtocol
+
+from aiopyramid.helpers import spawn_greenlet
 
 
-class AsyncGunicornWorker(BaseWorker):
+class AiopyramidHttpServerProtocol(WSGIServerHttpProtocol):
 
-    def run(self):
-        self._runner = asyncio.async(self._run(), loop=self.loop)
-        main = greenlet(self.loop.run_until_complete)
+    @asyncio.coroutine
+    def handle_request(self, message, payload):
+        """ Patched from aiohttp. """
+        now = time.time()
+
+        if self.readpayload:
+            wsgiinput = io.BytesIO()
+            wsgiinput.write((yield from payload.read()))
+            wsgiinput.seek(0)
+            payload = wsgiinput
+
+        environ = self.create_wsgi_environ(message, payload)
+        response = self.create_wsgi_response(message)
+
+        riter = yield from spawn_greenlet(
+            self.wsgi,
+            environ,
+            response.start_response
+        )
+
+        resp = response.response
         try:
-            main.switch(self._runner)
+            for item in riter:
+                if isinstance(item, asyncio.Future):
+                    item = yield from item
+                yield from resp.write(item)
+
+            yield from resp.write_eof()
         finally:
-            self.loop.close()
+            if hasattr(riter, 'close'):
+                riter.close()
 
-    def handle_quit(self, sig, frame):
-        self.alive = False
+        if resp.keep_alive():
+            self.keep_alive(True)
 
-    handle_exit = handle_quit
+        self.log_access(
+            message, environ, response.response, time.time() - now)
+
+
+class AsyncGunicornWorker(AiohttpWorker):
+
+    def factory(self, wsgi, host, port):
+        proto = AiopyramidHttpServerProtocol(
+            wsgi, loop=self.loop,
+            log=self.log,
+            debug=self.cfg.debug,
+            keep_alive=self.cfg.keepalive,
+            access_log=self.log.access_log,
+            access_log_format=self.cfg.access_log_format)
+        return self.wrap_protocol(proto)

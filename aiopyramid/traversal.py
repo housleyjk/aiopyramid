@@ -141,7 +141,7 @@ class AsyncioTraverser(TraverserBase):
 
             this = greenlet.getcurrent()
             future = asyncio.Future()
-            asyncio.async(
+            sub_task = asyncio.async(
                 run_in_greenlet(
                     this,
                     future,
@@ -157,7 +157,7 @@ class AsyncioTraverser(TraverserBase):
                     subpath,
                 )
             )
-            this.parent.switch()
+            this.parent.switch(sub_task)
             return future.result()
 
         return {

@@ -32,10 +32,11 @@ def coroutine_logger_tween_factory(handler, registry):
         this = greenlet.getcurrent()
 
         # queue request logging
-        asyncio.async(_async_log(this, request))
+        sub_task = asyncio.async(_async_log(this, request))
 
         # switch to parent so that aio loop runs
-        this.parent.switch()
+        # (waiting for subtask if gunicorn)
+        this.parent.switch(sub_task)
 
         # when request is logged, it will switch back to this
 
@@ -43,10 +44,11 @@ def coroutine_logger_tween_factory(handler, registry):
         response = handler(request)
 
         # queue respone logging
-        asyncio.async(_async_log(this, response))
+        sub_task = asyncio.async(_async_log(this, response))
 
         # switch to parent so that aio loop runs
-        this.parent.switch()
+        # (waiting for subtask if gunicorn)
+        this.parent.switch(sub_task)
 
         # when response is logged, it will switch back to this
 

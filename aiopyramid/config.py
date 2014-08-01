@@ -2,21 +2,12 @@
 This module provides view mappers for running views in asyncio.
 """
 import asyncio
-import inspect
 
 import greenlet
 from pyramid.config.views import DefaultViewMapper
 from pyramid.exceptions import ConfigurationError
 
-from .helpers import run_in_greenlet
-
-
-def _is_generator(func):
-    return (
-        inspect.isgeneratorfunction(func) or
-        isinstance(func, asyncio.Future) or
-        inspect.isgenerator(func)
-    )
+from .helpers import run_in_greenlet, is_generator
 
 
 class AsyncioMapperBase(DefaultViewMapper):
@@ -29,8 +20,10 @@ class AsyncioMapperBase(DefaultViewMapper):
         def coroutine_view(*args):
             this = greenlet.getcurrent()
             future = asyncio.Future()
-            asyncio.async(run_in_greenlet(this, future, view, *args))
-            this.parent.switch()
+            sub_task = asyncio.async(
+                run_in_greenlet(this, future, view, *args)
+            )
+            this.parent.switch(sub_task)
             return future.result()
 
         return coroutine_view
@@ -40,7 +33,7 @@ class AsyncioMapperBase(DefaultViewMapper):
         def executor_view(*args):
             this = greenlet.getcurrent()
             future = asyncio.Future()
-            asyncio.async(
+            sub_task = asyncio.async(
                 run_in_greenlet(
                     this,
                     future,
@@ -50,7 +43,7 @@ class AsyncioMapperBase(DefaultViewMapper):
                     *args
                 )
             )
-            this.parent.switch()
+            this.parent.switch(sub_task)
             return future.result()
         return executor_view
 
@@ -58,7 +51,7 @@ class AsyncioMapperBase(DefaultViewMapper):
 class CoroutineMapper(AsyncioMapperBase):
 
     def __call__(self, view):
-        if not asyncio.iscoroutinefunction(view) and _is_generator(view):
+        if not asyncio.iscoroutinefunction(view) and is_generator(view):
             view = asyncio.coroutine(view)
         else:
             raise ConfigurationError('Non-coroutine {} mapped to coroutine.'.format(view))
@@ -70,7 +63,7 @@ class CoroutineMapper(AsyncioMapperBase):
 class ExecutorMapper(AsyncioMapperBase):
 
     def __call__(self, view):
-        if asyncio.iscoroutinefunction(view) or _is_generator(view):
+        if asyncio.iscoroutinefunction(view) or is_generator(view):
             raise ConfigurationError('Coroutine {} mapped to executor.'.format(view))
         view = super().__call__(view)
         return self.run_in_executor_view(view)
@@ -82,7 +75,7 @@ class CoroutineOrExecutorMapper(AsyncioMapperBase):
 
         if asyncio.iscoroutinefunction(view):
             wrapper = self.run_in_coroutine_view
-        elif _is_generator(view):
+        elif is_generator(view):
             view = asyncio.coroutine(view)
             wrapper = self.run_in_coroutine_view
         else:
