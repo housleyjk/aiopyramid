@@ -26,7 +26,7 @@ setup(
     name='aiopyramid',
     version='0.1.0',
     description='Tools for running pyramid using asyncio.',
-    long_description=README + '\n\n' + CHANGES,
+    long_description=README + '\n\n\n\n' + CHANGES,
     classifiers=[
         "Programming Language :: Python",
         "Programming Language :: Python :: 3.3",
