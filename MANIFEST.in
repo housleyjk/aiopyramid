@@ -1,3 +1,3 @@
 include *.txt *.ini *.cfg *.rst LICENSE COPYRIGHT
-graft pyramid_asyncio/scaffolds
+graft aiopyramid/scaffolds
 
