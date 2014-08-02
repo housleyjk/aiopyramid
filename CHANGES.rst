@@ -3,6 +3,10 @@ Changes
 
 .. :changelog:
 
+0.1.2 (2014-08-02)
+------------------
+    - Update MANIFEST.in
+
 0.1.0 (2014-08-01)
 ------------------
     - Update README ready for release
