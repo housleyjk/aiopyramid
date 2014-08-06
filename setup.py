@@ -53,5 +53,6 @@ setup(
     entry_points="""\
     [pyramid.scaffold]
     aio_starter=aiopyramid.scaffolds:AioStarterTemplate
+    aio_websocket=aiopyramid.scaffolds:AioWebsocketTemplate
     """
 )
