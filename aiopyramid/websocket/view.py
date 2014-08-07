@@ -22,7 +22,6 @@ class WebsocketConnectionView:
                 yield from self.on_close()
                 break
             yield from self.on_message(message)
-            yield from self.send(message)
 
     @asyncio.coroutine
     def send(self, message):

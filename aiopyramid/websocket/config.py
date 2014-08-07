@@ -19,15 +19,12 @@ def uwsgi_recv_msg(g):
 class UWSGIWebsocket:
 
     def __init__(self, back, q_in, q_out):
-        print('initializing socket')
         self.back = back
         self.q_in = q_in
         self.q_out = q_out
 
     @asyncio.coroutine
     def recv(self):
-        print('in receive')
-        print(self.q_in.qsize())
         return (yield from self.q_in.get())
 
     @asyncio.coroutine
@@ -66,16 +63,25 @@ class UWSGIWebsocketMapper(AsyncioMapperBase):
             while True:
                 if this.has_message:
                     this.has_message = False
-                    msg = uwsgi.websocket_recv_nb()
+                    try:
+                        msg = uwsgi.websocket_recv_nb()
+                    except OSError:
+                        msg = None
+
                     if msg or msg is None:
                         q_in.put_nowait(msg)
+
                     if msg is None:
                         break
+
                 if not q_out.empty():
                     msg = q_out.get_nowait()
                     uwsgi.websocket_send(msg)
 
                 this.parent.switch()
+
+            # switch to let on_close run
+            this.parent.switch()
 
         return websocket_view
 
