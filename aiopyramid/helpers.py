@@ -39,7 +39,6 @@ def run_in_greenlet(back, future, func, *args):
 
     func is often a :term:`view callable`
     """
-
     try:
         result = yield from func(*args)
     except Exception as ex:

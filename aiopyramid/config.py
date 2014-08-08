@@ -23,8 +23,7 @@ class AsyncioMapperBase(DefaultViewMapper):
             sub_task = asyncio.async(
                 run_in_greenlet(this, future, view, context, request)
             )
-            while not sub_task.done():
-                this.parent.switch(sub_task)
+            this.parent.switch(sub_task)
             return future.result()
 
         return coroutine_view
@@ -50,8 +49,7 @@ class AsyncioMapperBase(DefaultViewMapper):
                         request,
                     )
                 )
-                while not sub_task.done():
-                    this.parent.switch(sub_task)
+                this.parent.switch(sub_task)
                 return future.result()
 
         return executor_view
