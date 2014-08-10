@@ -5,6 +5,8 @@ import greenlet
 from aiopyramid.config import AsyncioMapperBase
 from aiopyramid.helpers import run_in_greenlet
 
+from .exceptions import WebsocketClosed
+
 try:
     import uwsgi
 except ImportError:
@@ -45,7 +47,8 @@ class UWSGIWebsocketMapper(AsyncioMapperBase):
             q_out = asyncio.Queue()
 
             # make socket proxy
-            view._sock = UWSGIWebsocket(this, q_in, q_out)
+            view_inst = view(context, request)
+            view_inst._sock = UWSGIWebsocket(this, q_in, q_out)
 
             # start monitoring websocket events
             asyncio.get_event_loop().add_reader(
@@ -54,13 +57,16 @@ class UWSGIWebsocketMapper(AsyncioMapperBase):
                 this
             )
 
-            # wait for pingback
+            future = asyncio.Future()
+            asyncio.async(
+                run_in_greenlet(this, future, view_inst)
+            )
+
+            # switch to open
             this.parent.switch()
 
-            future = asyncio.Future()
-            asyncio.async(run_in_greenlet(this, future, view(context, request)))
-
             while True:
+                # message in
                 if this.has_message:
                     this.has_message = False
                     try:
@@ -74,14 +80,20 @@ class UWSGIWebsocketMapper(AsyncioMapperBase):
                     if msg is None:
                         break
 
+                # message out
                 if not q_out.empty():
                     msg = q_out.get_nowait()
-                    uwsgi.websocket_send(msg)
+                    try:
+                        uwsgi.websocket_send(msg)
+                    except OSError:
+                        q_in.put_nowait(None)
+                        break
 
                 this.parent.switch()
 
-            # switch to let on_close run
+            # switch to close
             this.parent.switch()
+            raise WebsocketClosed
 
         return websocket_view
 

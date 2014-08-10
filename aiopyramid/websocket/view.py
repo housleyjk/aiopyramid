@@ -36,7 +36,9 @@ class WebsocketConnectionView:
     @asyncio.coroutine
     def on_open(self):
         print('opening')
+        pass
 
     @asyncio.coroutine
     def on_close(self):
         print('closing')
+        pass
