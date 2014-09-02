@@ -48,6 +48,11 @@ level = WARN
 handlers =
 qualname = asyncio
 
+[logger_gunicorn]
+level = INFO
+handlers =
+qualname = gunicorn
+
 [logger_{{project}}]
 level = DEBUG
 handlers =

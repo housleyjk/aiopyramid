@@ -4,8 +4,8 @@ Introduction
 A library for leveraging pyramid infrastructure asyncronously using the new ``asyncio``.
 
 This library provides some of the same functionality as
-`pyramid_asyncio`_, but it has more features
-and follows a different approach. See `The Why`_.
+`pyramid_asyncio`_, but it has more `features`_
+and follows a different approach. See `Approach`_.
 
 Since this library is built on relatively new technology, it is not intended for production use.
 
@@ -26,10 +26,13 @@ For example:
     python setup.py develop
     pserve development.ini
 
+There is also a ``websocket`` scaffold `aio_websocket` for those who basic tools for setting up
+a ``websocket`` server.
+
 Features
 ========
 ``Aiopyramid`` provides tools for making web applications with ``pyramid`` and ``aysncio``.
-It will not by itself make your application asyncronous. Instead, it gives you some tools
+It will not necessarily make your application run faster Instead, it gives you some tools
 and patterns to build an application on asyncronous servers.
 Bear in mind that you will need to use asyncronous libraries for io where appropriate.
 
@@ -45,9 +48,11 @@ When you include ``Aiopyramid``,
 the default view mapper is replaced with the ``CoroutineOrExecutorMapper``
 which detects whether your ``view_callable`` is a coroutine and does a ``yield from`` to
 call it asyncronously. If your ``view_callable`` is not a coroutine, it will run it in a
-separate thread to avoid blocking the thread with the main loop.
+separate thread to avoid blocking the thread with the main loop. ``Asyncio`` is not thread-safe,
+so you will need to guarantee that either in memory resources are not shared between ``view callables``
+running in the executor or that such resources are synchronized.
 
-This means that you do not need to change existing views in anyway. Also, via ``pyramid``
+This means that you should not need to change existing views. Also,
 it is possible to restore the default view mapper, but note that this will mean that
 coroutine views that do not specify ``CoroutineMapper`` as their view mapper will fail.
 
@@ -57,8 +62,8 @@ Asyncronous Tweens
 existing `tweens` expect those `tweens` above and below them to run syncronously. Therefore,
 if you have a tween that needs to run asyncronously (e.g. it looks up some data from a
 database for each request), then you will need to write that `tween` so that it can wait
-without other `tweens` needing to ``yield from`` it. An example of this pattern is provided
-in ``aiopyramid.tweens``.
+without other `tweens` needing explicitly to ``yield from`` it. An example of this pattern
+is provided in ``aiopyramid.tweens``.
 
 Asyncronous Traversal
 ---------------------
@@ -78,8 +83,7 @@ projects/pyramid/en/1.0-branch/narr/hooks.html#changing-the-traverser>`_ like so
 
 Server Support
 --------------
-``Aiopyramid`` supports both asyncronous `gunicorn`_
-and the `uWSGI asyncio plugin <http://uwsgi-docs.readthedocs.org/en/latest/asyncio.html>`_.
+``Aiopyramid`` supports both asyncronous `gunicorn`_ and the `uWSGI asyncio plugin`_.
 
 Example `gunicorn`_ config:
 
@@ -102,30 +106,81 @@ Example `uWSGI`_ config:
         asyncio = 50
         greenlet
 
+Websockets
+----------
+``Aiopyramid`` provides additional view mappers for handling websocket connections with either
+`gunicorn`_ or `uWSGI`. Websockets with `gunicorn`_ use the `websockets`_ library whereas with
+`uWSGI` has native websocket support. In either case, the interface is the same.
 
-The Why
-=======
+A function ``view callable`` for a websocket connection follows this pattern:
 
-`TL;DR` I wanted to support `uWSGI`_ and existing extensions
-such as `pyramid_debugtoolbar`_.
+::
 
-Q: So, why make a new library when `pyramid_asyncio`_
-already exists?
+    @view_config(mapper=<WebsocketMapper>)
+    def websocket_callable(ws):
+        # do stuff with ws
 
-A: I tried out `pyramid_asyncio`_, but as soon as I installed `pyramid_debugtoolbar`_, it broke. It
-didn't break because `pyramid_debugtoolbar`_ does blocking io, rather it broke because of the fact
-that `pyramid_asyncio`_ rewrites the ``pyramid`` router to expect coroutines from
-``pryamid`` internals. Moreover, the fact that `pyramid_asyncio`_ patches the wsgi callable from
-``pyramid`` prevents it from working with the `uWSGI asyncio plugin`_. In essence, it ties developers
-to `gunicorn`_.
 
-Since the `pyramid_asyncio`_ depends on the patching made to the ``pyramid`` router, I needed to write
-a new library.
+The ``ws`` argument passed to the callable has three methods for communicating with the websocket:
+``recv``, ``send``, and ``close``, which correspond to similar methods in the `websockets`_ library.
+A websocket connection that echoes all messages using `gunicorn`_  would be:
 
-In this new approach, I tried to follow these principles:
+::
 
-    1. ``Aiopyramid`` should extend ``pyramid`` through existing ``pyramid`` mechanisms where possible.
-    2. Asyncronous code should be wrapped to that callers can treat it as syncronous code.
+    from pyramid.view import view_config
+    from aiopyramid.websocket.config import WebsocketMapper
+
+    @view_config(route_name="ws", mapper=WebsocketMapper)
+    def echo(ws):
+        while True:
+            message = yield from ws.recv()
+            if message is None:
+                break
+            yield from ws.send(message)
+
+``Aiopyramid`` also provides a ``view callable`` class ``WebsocketConnectionView`` that has ``on_message``,
+``on_open``, and ``on_close`` callbacks. Class-based websocket views also have a ``send`` convenience method,
+otherwise the underyling ``ws`` may be accessed as ``self.ws``. Simply extend ``WebsocketConnectionView``
+specifying the correct view mapper for your server either via the ``__view_mapper__`` attribute or the
+``view_config`` decorator. The above example could be rewritten in a larger project, this time using `uWSGI`_,
+as follows:
+
+::
+
+    from pyramid.view import view_config
+    from aiopyramid.websocket.view import WebsocketConnectionView
+    from aiopyramid.websocket.config import UWSGIWebsocketMapper
+
+    from myproject.resources import MyWebsocketContext
+
+    class MyWebsocket(WebsocketConnectionView):
+        __view_mapper__ = UWSGIWebsocketMapper
+
+
+    @view_config(context=MyWebsocketContext)
+    class EchoWebsocket(MyWebsocket):
+
+        def on_message(self, message):
+            yield from self.send(message)
+
+
+Approach
+========
+
+`TL;DR` I chose to make a new ``asyncio`` extension because I wanted to support `uWSGI`_ and
+existing non-asyncronous extensions such as `pyramid_debugtoolbar`_.
+
+``Aiopyramid`` follows a different approach from `pyramid_asyncio`_ for the following reasons:
+
+    -   The `pyramid_asyncio`_ library depends on patches made to the ``pyramid`` router that prevent it
+        from working with the `uWSGI asyncio plugin`_.
+    -   The `pyramid_asyncio`_ rewrites various parts of ``pyramid``,
+        including tweens, to expect coroutins from ``pyramid`` internals.
+
+On the other hand ``aiopyramid`` is designed to follow these principles:
+
+    -   ``Aiopyramid`` should extend ``pyramid`` through existing ``pyramid`` mechanisms where possible.
+    -    Asyncronous code that should be wrapped so that existing callers can treat it as syncronous code.
 
 The first principle is one of the reasons why I used view mappers rather than patching the router.
 View mappers are a mechanism already in place to handle how views are called. We don't need to rewrite
@@ -133,14 +188,15 @@ vast parts of ``pyramid`` to run a view in the ``asyncio`` event loop. Yes, ``py
 
 The second principle is what allows ``aiopyramid`` to support existing extensions. The goal is to isolate
 asyncronous code from code that expects a syncronous response. Those methods that already exist in ``pyramid``
-(i.e. those that comprise its API) should never be rewritten as coroutines because we don't know who will
+should not be rewritten as coroutines because we don't know who will
 try to call them as regular methods.
 
-This approach allows for making only those parts of ``pyramid`` that necessarily run blocking code actually
-run in the ``asyncio`` event loop. Therefore, it should be possible to run an existing url dispatch application
-asyncronously without modification. Blocking code will naturally end up being run in a separate thread via
-the ``asyncio run_in_executor`` method. This allows you to optimize only those highly concurrent views in your
-application or add in websocket support without needing to refactor all of the code.
+Most of the ``pyramid`` framework does not run io blocking code. So, it is not actually necessary to change the
+framework itself. Instead we need tools for making application code asyncronous. It should be possible
+to run an existing url dispatch application asyncronously without modification. Blocking code will naturally end
+up being run in a separate thread via the ``asyncio run_in_executor`` method. This allows you to optimize
+only those highly concurrent views in your application or add in websocket support without needing to refactor
+all of the code.
 
 It is easy to simulate a multithreaded server by increasing the number of threads available to the executor.
 
@@ -153,10 +209,13 @@ For example, include the following in your application's constructor:
     ...
     asyncio.get_event_loop().set_default_executor(ThreadPoolExecutor(max_workers=150))
 
-This kind of flexibility is not available int `pyramid_asyncio`_.
+It should be noted that ``Aiopyramid`` is not thread-safe by nature. You will need to ensure that in memory
+resources are not modified by multiple non-coroutine ``view callables``. For most existing applications, this
+should not be a problem.
 
 .. _pyramid_asyncio: https://github.com/mardiros/pyramid_asyncio
 .. _gunicorn: http://gunicorn.org
 .. _uWSGI: https://github.com/unbit/uwsgi
 .. _pyramid_debugtoolbar: https://github.com/Pylons/pyramid_debugtoolbar
-.. uWSGI asyncio plugin: http://uwsgi-docs.readthedocs.org/en/latest/asyncio.html
+.. _uWSGI asyncio plugin: http://uwsgi-docs.readthedocs.org/en/latest/asyncio.html
+.. _websockets: http://aaugustin.github.io/websockets/

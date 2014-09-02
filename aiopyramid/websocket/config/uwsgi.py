@@ -1,11 +1,11 @@
-
+import inspect
 import asyncio
 
 import greenlet
+
 from aiopyramid.config import AsyncioMapperBase
 from aiopyramid.helpers import run_in_greenlet
-
-from .exceptions import WebsocketClosed
+from aiopyramid.websocket.exceptions import WebsocketClosed
 
 try:
     import uwsgi
@@ -24,6 +24,7 @@ class UWSGIWebsocket:
         self.back = back
         self.q_in = q_in
         self.q_out = q_out
+        self.open = True
 
     @asyncio.coroutine
     def recv(self):
@@ -33,6 +34,11 @@ class UWSGIWebsocket:
     def send(self, message):
         yield from self.q_out.put(message)
         self.back.switch()
+
+    @asyncio.coroutine
+    def close(self):
+        yield from self.q_in.put(None)
+        self.back.throw(WebsocketClosed)
 
 
 class UWSGIWebsocketMapper(AsyncioMapperBase):
@@ -47,8 +53,11 @@ class UWSGIWebsocketMapper(AsyncioMapperBase):
             q_out = asyncio.Queue()
 
             # make socket proxy
-            view_inst = view(context, request)
-            view_inst._sock = UWSGIWebsocket(this, q_in, q_out)
+            if inspect.isclass(view):
+                view_callable = view(context, request)
+            else:
+                view_callable = view
+            ws = UWSGIWebsocket(this, q_in, q_out)
 
             # start monitoring websocket events
             asyncio.get_event_loop().add_reader(
@@ -59,7 +68,7 @@ class UWSGIWebsocketMapper(AsyncioMapperBase):
 
             future = asyncio.Future()
             asyncio.async(
-                run_in_greenlet(this, future, view_inst)
+                run_in_greenlet(this, future, view_callable, ws)
             )
 
             # switch to open

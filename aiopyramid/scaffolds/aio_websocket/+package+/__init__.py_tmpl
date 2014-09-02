@@ -14,6 +14,7 @@ def main(global_config, **settings):
     )
 
     config = Configurator(settings=settings)
-    config.add_route('say_hello', '/')
+    config.add_route('home', '/')
+    config.add_route('echo', '/echo')
     config.scan()
     return config.make_wsgi_app()

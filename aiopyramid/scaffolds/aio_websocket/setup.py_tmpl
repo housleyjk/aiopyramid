@@ -17,6 +17,7 @@ with open(os.path.join(here, 'CHANGES.rst')) as changes:
 
 requires = [
     'aiopyramid',
+    'pyramid_jinja2',
 ]
 
 setup(
@@ -35,7 +36,7 @@ setup(
     author='',
     author_email='',
     url='',
-    keywords='asyncio web wsgi pylons pyramid',
+    keywords='aiopyramid asyncio web wsgi pylons pyramid',
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,

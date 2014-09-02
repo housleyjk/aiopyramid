@@ -1,10 +1,16 @@
-import asyncio
-
 from pyramid.view import view_config
+from aiopyramid.websocket.config import WebsocketMapper
 
 
-@view_config(route_name='say_hello', renderer='string')
-def say_hello(request):
-    wait_time = float(request.params.get('sleep', 0.1))
-    yield from asyncio.sleep(wait_time)
-    return "Welcome to Pyramid with Asyncio."
+@view_config(route_name='home', renderer='{{project}}:templates/home.jinja2')
+def home(request):
+    return {'title': '{{project}} websocket test'}
+
+
+@view_config(route_name='echo', mapper=WebsocketMapper)
+def echo(ws):
+    while True:
+        message = yield from ws.recv()
+        if message is None:
+            break
+        yield from ws.send(message)

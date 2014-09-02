@@ -24,7 +24,7 @@ if py_version < (3, 4):
 
 setup(
     name='aiopyramid',
-    version='0.1.2',
+    version='0.2.0',
     description='Tools for running pyramid using asyncio.',
     long_description=README + '\n\n\n\n' + CHANGES,
     classifiers=[
@@ -47,7 +47,7 @@ setup(
     test_suite='aiopyramid',
     install_requires=requires,
     extras_require={
-        'gunicorn': ['gunicorn', 'aiohttp'],
+        'gunicorn': ['gunicorn==19.0.0', 'aiohttp', 'websockets'],
     },
     license="BSD-derived (http://www.repoze.org/LICENSE.txt)",
     entry_points="""\

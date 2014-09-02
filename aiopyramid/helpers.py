@@ -21,6 +21,7 @@ def spawn_greenlet(func, *args):
     This is used by the Gunicorn worker to proxy a greenlet within an `asyncio`
     event loop.
     """
+
     g = greenlet.greenlet(func)
     result = g.switch(*args)
     while True:

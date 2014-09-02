@@ -6,13 +6,9 @@
 [app:main]
 use = egg:{{project}}
 
-pyramid.reload_templates = true
-pyramid.debug_authorization = false
-pyramid.debug_notfound = false
-pyramid.debug_routematch = false
-pyramid.default_locale_name = en
 pyramid.includes =
     aiopyramid
+    pyramid_jinja2
 
 # for py3
 logging.config = %(here)s/development.ini
@@ -31,7 +27,7 @@ port = 6543
 worker_class = aiopyramid.gunicorn.worker.AsyncGunicornWorker
 
 [loggers]
-keys = root, asyncio, {{project}}
+keys = root, asyncio, {{project}}, gunicorn
 
 [handlers]
 keys = console
@@ -47,6 +43,11 @@ handlers = console
 level = WARN
 handlers =
 qualname = asyncio
+
+[logger_gunicorn]
+level = INFO
+handlers =
+qualname = gunicorn
 
 [logger_{{project}}]
 level = DEBUG

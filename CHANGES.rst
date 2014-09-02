@@ -3,6 +3,12 @@ Changes
 
 .. :changelog:
 
+0.2.0 (2014-09-01)
+------------------
+    - Update README
+    - added websocket mappers for uwsgi and gunicorn
+    - added websocket view class 
+
 0.1.2 (2014-08-02)
 ------------------
     - Update MANIFEST.in
