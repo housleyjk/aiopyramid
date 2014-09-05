@@ -164,6 +164,24 @@ as follows:
             yield from self.send(message)
 
 
+uWSGI Special Note
+..................
+
+``Aiopyramid`` uses a special ``WebsocketClosed`` exception to disconnect a ``greenlet`` after a websocket
+has been closed. This exception will be visible in log ouput when using `uWSGI`_. In order to squelch this
+message, wrap the wsgi application in the ``ignore_websocket_closed`` middleware
+in your application's constructor like so:
+
+::
+
+    from aiopyramid.websocket.helpers import ignore_websocket_closed
+
+    ...
+    app = config.make_wsgi_app()
+    return ignore_websocket_closed(app)
+
+
+
 Approach
 ========
 
