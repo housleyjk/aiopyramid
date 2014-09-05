@@ -16,7 +16,7 @@ with open(os.path.join(here, 'CHANGES.rst')) as changes:
     CHANGES = changes.read()
 
 requires = [
-    'aiopyramid',
+    'aiopyramid[gunicorn]',
 ]
 
 setup(
