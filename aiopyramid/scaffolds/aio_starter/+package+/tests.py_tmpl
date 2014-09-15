@@ -1,13 +1,18 @@
 import unittest
+import asyncio
 
 from pyramid import testing
-from aiopyramid.testing import async_test
+
 
 class HelloTestCase(unittest.TestCase):
 
-    @async_test
-    def test_passing_view(self):
+    def test_demo_view(self):
         from .views import say_hello
-        request = testing.DummyRequest()
-        info = yield from say_hello(request)
-        self.assertEqual(info['name'], 'asyncio')
+
+        @asyncio.coroutine
+        def _test_say_hello():
+            request = testing.DummyRequest()
+            view_callable = asyncio.coroutine(say_hello)
+            info = yield from view_callable(request)
+            self.assertEqual(info, 'Welcome to Pyramid with Asyncio.')
+        asyncio.get_event_loop().run_until_complete(_test_say_hello())

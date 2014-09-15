@@ -3,9 +3,7 @@ Introduction
 
 A library for leveraging pyramid infrastructure asyncronously using the new ``asyncio``.
 
-This library provides some of the same functionality as
-`pyramid_asyncio`_, but it has more `features`_
-and follows a different approach. See `Approach`_.
+See `Approach`_ for why I made this library.
 
 Since this library is built on relatively new technology, it is not intended for production use.
 
@@ -181,6 +179,20 @@ in your application's constructor like so:
     return ignore_websocket_closed(app)
 
 
+Tests
+=====
+
+Core functionality is backed by tests. The recommended test runner is `pytest`_. To run the
+tests, grab the code on `github`_, install `pytest`_, and run it like so:
+
+::
+
+    git clone https://github.com/housleyjk/aiopyramid
+    cd aiopyramid
+    pip install pytest
+    py.test
+
+
 
 Approach
 ========
@@ -188,12 +200,13 @@ Approach
 `TL;DR` I chose to make a new ``asyncio`` extension because I wanted to support `uWSGI`_ and
 existing non-asyncronous extensions such as `pyramid_debugtoolbar`_.
 
-``Aiopyramid`` follows a different approach from `pyramid_asyncio`_ for the following reasons:
+``Aiopyramid`` was originally based on `pyramid_asyncio`_, but I followed a different approach
+for the following reasons:
 
     -   The `pyramid_asyncio`_ library depends on patches made to the ``pyramid`` router that prevent it
         from working with the `uWSGI asyncio plugin`_.
     -   The `pyramid_asyncio`_ rewrites various parts of ``pyramid``,
-        including tweens, to expect coroutins from ``pyramid`` internals.
+        including tweens, to expect coroutines from ``pyramid`` internals.
 
 On the other hand ``aiopyramid`` is designed to follow these principles:
 
@@ -237,3 +250,5 @@ should not be a problem.
 .. _pyramid_debugtoolbar: https://github.com/Pylons/pyramid_debugtoolbar
 .. _uWSGI asyncio plugin: http://uwsgi-docs.readthedocs.org/en/latest/asyncio.html
 .. _websockets: http://aaugustin.github.io/websockets/
+.. _pytest: http://pytest.org
+.. _github: https://github.com/housleyjk/aiopyramid

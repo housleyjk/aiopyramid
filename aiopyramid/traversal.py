@@ -52,7 +52,7 @@ def traverse(
             }
 
         try:
-            next = yield from getitem(segment)
+            tsugi = yield from getitem(segment)
         except KeyError:
             return {
                 'context': ob,
@@ -64,8 +64,8 @@ def traverse(
                 'root': root,
             }
         if i == vroot_idx:
-            vroot = next
-        ob = next
+            vroot = tsugi
+        ob = tsugi
         i += 1
 
     return {

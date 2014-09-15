@@ -3,6 +3,12 @@ Changes
 
 .. :changelog:
 
+0.2.1 (2014-09-15)
+------------------
+    - Update scaffold example tests
+    - Add test suite
+    - Update README
+
 0.2.0 (2014-09-01)
 ------------------
     - Update README

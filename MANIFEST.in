@@ -2,4 +2,4 @@ include *.txt *.ini *.cfg *.rst LICENSE COPYRIGHT
 graft aiopyramid/scaffolds
 graft aiopyramid/gunicorn
 graft aiopyramid/websocket
-
+graft tests
