@@ -47,7 +47,7 @@ setup(
     test_suite='aiopyramid',
     install_requires=requires,
     extras_require={
-        'gunicorn': ['gunicorn==19.0.0', 'aiohttp', 'websockets'],
+        'gunicorn': ['gunicorn>=19.1.1', 'aiohttp', 'websockets'],
     },
     license="BSD-derived (http://www.repoze.org/LICENSE.txt)",
     entry_points="""\
