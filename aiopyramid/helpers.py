@@ -25,12 +25,9 @@ def spawn_greenlet(func, *args, **kwargs):
     g = greenlet.greenlet(func)
     result = g.switch(*args, **kwargs)
     while True:
-        print(result)
         if isinstance(result, asyncio.Future):
-            print('waiting for it')
             result = yield from result
         else:
-            print('breaking')
             break
     return result
 
