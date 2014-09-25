@@ -1,6 +1,7 @@
-import greenlet
 import asyncio
 import logging
+
+import greenlet
 
 log = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ def coroutine_logger_tween_factory(handler, registry):
         # NOTE: this does not do exception handling, which means
         # that no 500 error view will be run. The exception needs to
         # be reraised in the request greenlet. See helpers.run_in_greenlet for
-        # and example.
+        # an example.
 
         yield from asyncio.get_event_loop().run_in_executor(
             None,
