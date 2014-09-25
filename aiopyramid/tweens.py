@@ -42,8 +42,9 @@ def coroutine_logger_tween_factory(handler, registry):
 
         # when request is logged, it will switch back to this
 
-        # get response, this should be done in this greenlet and not as a coroutine
-        # because this will call the next tween
+        # get response, this should be done in this greenlet
+        # and not as a coroutine because this will call
+        # the next tween
         response = handler(request)
 
         # queue respone logging

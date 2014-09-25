@@ -44,7 +44,6 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
-    test_suite='aiopyramid',
     install_requires=requires,
     extras_require={
         'gunicorn': ['gunicorn>=19.1.1', 'aiohttp', 'websockets'],

@@ -39,7 +39,9 @@ class TestTraversal(unittest.TestCase):
             config.add_traverser(AsyncioTraverser)
             resource = TestResource('root', None)
             resource.add_child('cat', TestResource)
-            out = self.loop.run_until_complete(spawn_greenlet(traverse, resource, ['cat']))
+            out = self.loop.run_until_complete(
+                spawn_greenlet(traverse, resource, ['cat']),
+            )
             self.assertEqual(len(out['traversed']), 1)
 
     def test_async_root(self):
@@ -47,7 +49,9 @@ class TestTraversal(unittest.TestCase):
             config.add_traverser(AsyncioTraverser)
             resource = TestResource('root', None)
             resource.add_child('cat', TestResource)
-            out = self.loop.run_until_complete(spawn_greenlet(traverse, resource, ['']))
+            out = self.loop.run_until_complete(
+                spawn_greenlet(traverse, resource, ['']),
+            )
             self.assertTrue(out.get('root') == out.get('context'))
 
     def test_async_depth(self):
@@ -55,9 +59,13 @@ class TestTraversal(unittest.TestCase):
             config.add_traverser(AsyncioTraverser)
             resource = TestResource('root', None)
             resource.add_child('cat', TestResource)
-            out = self.loop.run_until_complete(spawn_greenlet(traverse, resource, ['cat']))
+            out = self.loop.run_until_complete(
+                spawn_greenlet(traverse, resource, ['cat']),
+            )
             out['context'].add_child('dog', TestResource)
-            out = self.loop.run_until_complete(spawn_greenlet(traverse, resource, ['cat', 'dog']))
+            out = self.loop.run_until_complete(
+                spawn_greenlet(traverse, resource, ['cat', 'dog']),
+            )
             self.assertListEqual(list(out['traversed']), ['cat', 'dog'])
 
     def test_async_view_name(self):
@@ -65,6 +73,8 @@ class TestTraversal(unittest.TestCase):
             config.add_traverser(AsyncioTraverser)
             resource = TestResource('root', None)
             resource.add_child('cat', TestResource)
-            out = self.loop.run_until_complete(spawn_greenlet(traverse, resource, ['cat', 'mouse']))
+            out = self.loop.run_until_complete(
+                spawn_greenlet(traverse, resource, ['cat', 'mouse']),
+            )
             self.assertListEqual(list(out['traversed']), ['cat'])
             self.assertEqual(out['view_name'], 'mouse')

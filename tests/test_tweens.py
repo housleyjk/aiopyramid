@@ -25,7 +25,9 @@ class TestTweens(unittest.TestCase):
         def async_tween(request):
             this = greenlet.getcurrent()
             future = asyncio.Future()
-            sub_task = asyncio.async(run_in_greenlet(this, future, _async_action))
+            sub_task = asyncio.async(
+                run_in_greenlet(this, future, _async_action),
+            )
             self.assertIsInstance(sub_task, asyncio.Future)
             this.parent.switch(sub_task)
             self.assertEqual(future.result(), 12)
@@ -37,7 +39,9 @@ class TestTweens(unittest.TestCase):
         return handler
 
     def test_async_tween(self):
-        out = self.loop.run_until_complete(spawn_greenlet(self._async_tween_factory(None, None), None))
+        out = self.loop.run_until_complete(
+            spawn_greenlet(self._async_tween_factory(None, None), None),
+        )
         self.assertEqual(out, 12)
 
     def test_example_tween(self):

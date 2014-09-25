@@ -71,7 +71,10 @@ class WebsocketMapper(AsyncioMapperBase):
                 ws_protocol.connection_made(transport)
                 asyncio.async(_ensure_ws_close(ws_protocol))
 
-            response = SwitchProtocolsResponse(request.environ, switch_protocols)
+            response = SwitchProtocolsResponse(
+                request.environ,
+                switch_protocols,
+            )
             # convert iterator to avoid eof issues
             response.body = response.body
 

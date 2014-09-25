@@ -3,10 +3,11 @@ Changes
 
 .. :changelog:
 
-0.2.2 (2014-09-15)
+0.2.2 (2014-09-25)
 ------------------
     - Update example tween to work with gunicorn
     - Add kwargs support to helpers
+    - Add tox for testing
 
 0.2.1 (2014-09-15)
 ------------------
@@ -18,7 +19,7 @@ Changes
 ------------------
     - Update README
     - added websocket mappers for uwsgi and gunicorn
-    - added websocket view class 
+    - added websocket view class
 
 0.1.2 (2014-08-02)
 ------------------

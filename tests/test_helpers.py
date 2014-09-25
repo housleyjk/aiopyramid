@@ -53,7 +53,9 @@ class TestSpawnGreenlet(unittest.TestCase):
         def _return_4():
             return 4
 
-        out = asyncio.get_event_loop().run_until_complete(spawn_greenlet(_return_4))
+        out = asyncio.get_event_loop().run_until_complete(
+            spawn_greenlet(_return_4),
+        )
         self.assertEqual(out, 4)
 
     def test_switch_direct_result(self):
@@ -64,7 +66,9 @@ class TestSpawnGreenlet(unittest.TestCase):
             this.parent.switch(4)
             return 5
 
-        out = asyncio.get_event_loop().run_until_complete(spawn_greenlet(_switch_4_return_5))
+        out = asyncio.get_event_loop().run_until_complete(
+            spawn_greenlet(_switch_4_return_5),
+        )
         self.assertEqual(out, 4)
 
     def test_wait_on_future(self):
@@ -77,8 +81,12 @@ class TestSpawnGreenlet(unittest.TestCase):
             this.parent.switch(future)
             return 5  # This should never get returned
 
-        future.set_result(4)  # the result is already set, but spawn_greenlet will still need to yield from it
-        out = asyncio.get_event_loop().run_until_complete(spawn_greenlet(_switch_future))
+        # the result is already set, but
+        # spawn_greenlet will still need to yield from it
+        future.set_result(4)
+        out = asyncio.get_event_loop().run_until_complete(
+            spawn_greenlet(_switch_future),
+        )
         self.assertEqual(out, 4)
 
 
@@ -96,12 +104,16 @@ class TestRunInGreenlet(unittest.TestCase):
             this = greenlet.getcurrent()
             future = asyncio.Future()
             message = 12
-            sub_task = asyncio.async(run_in_greenlet(this, future, _sample, message))
+            sub_task = asyncio.async(
+                run_in_greenlet(this, future, _sample, message),
+            )
             this.parent.switch(sub_task)
             self.assertEqual(future.result(), message)
             return message + 1
 
-        out = asyncio.get_event_loop().run_until_complete(spawn_greenlet(_greenlet))
+        out = asyncio.get_event_loop().run_until_complete(
+            spawn_greenlet(_greenlet),
+        )
         self.assertEqual(13, out)
 
     def test_result_chain(self):
@@ -122,12 +134,19 @@ class TestRunInGreenlet(unittest.TestCase):
             this = greenlet.getcurrent()
             future = asyncio.Future()
             message = 12
-            sub_task = asyncio.async(run_in_greenlet(this, future, _chain, message))
+            sub_task = asyncio.async(run_in_greenlet(
+                this,
+                future,
+                _chain,
+                message,
+            ))
             this.parent.switch(sub_task)
             self.assertEqual(future.result(), message - 1)
             return message + 1
 
-        out = asyncio.get_event_loop().run_until_complete(spawn_greenlet(_greenlet))
+        out = asyncio.get_event_loop().run_until_complete(
+            spawn_greenlet(_greenlet),
+        )
         self.assertEqual(13, out)
 
     def test_exception(self):
@@ -141,8 +160,12 @@ class TestRunInGreenlet(unittest.TestCase):
         def _greenlet():
             this = greenlet.getcurrent()
             future = asyncio.Future()
-            sub_task = asyncio.async(run_in_greenlet(this, future, _sample))
+            sub_task = asyncio.async(
+                run_in_greenlet(this, future, _sample),
+            )
             this.parent.switch(sub_task)
             self.assertRaises(KeyError, future.result)
 
-        asyncio.get_event_loop().run_until_complete(spawn_greenlet(_greenlet))
+        asyncio.get_event_loop().run_until_complete(
+            spawn_greenlet(_greenlet),
+        )
