@@ -3,6 +3,11 @@ Changes
 
 .. :changelog:
 
+0.2.2 (2014-09-15)
+------------------
+    - Update example tween to work with gunicorn
+    - Add kwargs support to helpers
+
 0.2.1 (2014-09-15)
 ------------------
     - Update scaffold example tests

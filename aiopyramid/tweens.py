@@ -25,7 +25,8 @@ def coroutine_logger_tween_factory(handler, registry):
             log.info,
             content
         )
-        back.switch()
+        # return in case there is a subtask
+        return back.switch()
 
     def coroutine_logger_tween(request):
         # get this greenlet
@@ -40,7 +41,8 @@ def coroutine_logger_tween_factory(handler, registry):
 
         # when request is logged, it will switch back to this
 
-        # get response, this could also be done in a coroutine
+        # get response, this should be done in this greenlet and not as a coroutine
+        # because this will call the next tween
         response = handler(request)
 
         # queue respone logging

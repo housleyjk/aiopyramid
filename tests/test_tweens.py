@@ -77,3 +77,9 @@ class TestTweens(unittest.TestCase):
         chain = tweens(None, None)
         out = self.loop.run_until_complete(spawn_greenlet(chain, None))
         self.assertEqual(out, 12)
+
+
+class TestTweensGunicorn(unittest.TestCase):
+
+    """ Test aiopyramid tweens gunicorn style. """
+    # TODO write tests that rely on subtasks

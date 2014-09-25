@@ -14,7 +14,7 @@ def is_generator(func):
 
 
 @asyncio.coroutine
-def spawn_greenlet(func, *args):
+def spawn_greenlet(func, *args, **kwargs):
     """
     Spawns a new greenlet and waits on any `asyncio.Future` objects returned.
 
@@ -23,17 +23,20 @@ def spawn_greenlet(func, *args):
     """
 
     g = greenlet.greenlet(func)
-    result = g.switch(*args)
+    result = g.switch(*args, **kwargs)
     while True:
+        print(result)
         if isinstance(result, asyncio.Future):
+            print('waiting for it')
             result = yield from result
         else:
+            print('breaking')
             break
     return result
 
 
 @asyncio.coroutine
-def run_in_greenlet(back, future, func, *args):
+def run_in_greenlet(back, future, func, *args, **kwargs):
     """
     Wait for :term:`coroutine` func and switch back to the request greenlet
     setting any result in the future or an Exception where approrpiate.
