@@ -5,6 +5,8 @@ import functools
 import greenlet
 from pyramid.exceptions import ConfigurationError
 
+from .exceptions import ScopeError
+
 
 def is_generator(func):
     """ Tests whether `func` is capable of becoming an `asyncio.coroutine`. """
@@ -43,7 +45,7 @@ def run_in_greenlet(back, future, func, *args, **kwargs):
     func is often a :term:`view callable`
     """
     try:
-        result = yield from func(*args)
+        result = yield from func(*args, **kwargs)
     except Exception as ex:
         future.set_exception(ex)
     else:
@@ -52,28 +54,50 @@ def run_in_greenlet(back, future, func, *args, **kwargs):
         return back.switch()
 
 
-def synchronize(coroutine_func, safe=True):
+def synchronize(strict=True):
     """
     Decorator for transforming an async coroutine function into a regular
     function relying on the `aiopyramid` architecture to schedule
     the coroutine and obtain the result.
     """
 
-    if safe and not asyncio.iscoroutinefunction(coroutine_func):
-        raise ConfigurationError(
-            'Attempted to synchronize a non-coroutine.'.format(coroutine_func)
-        )
+    def _wrapper(coroutine_func):
+        if not asyncio.iscoroutinefunction(coroutine_func):
+            raise ConfigurationError(
+                'Attempted to synchronize a non-coroutine.'.format(coroutine_func)
+            )
 
-    @functools.wraps(coroutine_func)
-    def _wrapped_coroutine(*args, **kwargs):
+        @functools.wraps(coroutine_func)
+        def _wrapped_coroutine(*args, **kwargs):
 
-        this = greenlet.getcurrent()
-        future = asyncio.Future()
-        sub_task = asyncio.async(
-            run_in_greenlet(this, future, coroutine_func, *args, **kwargs)
-        )
-        while not future.done():
-            this.parent.switch(sub_task)
-        return future.result()
+            this = greenlet.getcurrent()
+            if this.parent is None:
+                if strict:
+                    raise ScopeError(
+                        '''
+                        Synchronized coroutine {} called in the parent greenlet.
 
-    return _wrapped_coroutine
+                        This is most likely because you called the synchronized coroutine
+                        inside of another coroutine. You need to yield from the coroutine
+                        directly without wrapping it in aiopyramid.helpers.synchronize.
+
+                        If you are calling this coroutine indirectly from a regular
+                        function and therefore cannot yield from it, then you need to run
+                        the first caller inside the parent coroutine inside a new greenlet
+                        using aiopyramid.helpers.spawn_greenlet.
+                        '''
+                    )
+                else:
+                    return coroutine_func(*args, **kwargs)
+            else:
+                future = asyncio.Future()
+                sub_task = asyncio.async(
+                    run_in_greenlet(this, future, coroutine_func, *args, **kwargs)
+                )
+                while not future.done():
+                    this.parent.switch(sub_task)
+                return future.result()
+
+        return _wrapped_coroutine
+
+    return _wrapper

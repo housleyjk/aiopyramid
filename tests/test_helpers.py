@@ -2,6 +2,7 @@ import asyncio
 import unittest
 
 import greenlet
+from pyramid.exceptions import ConfigurationError
 
 
 class TestIsGenerator(unittest.TestCase):
@@ -169,3 +170,38 @@ class TestRunInGreenlet(unittest.TestCase):
         asyncio.get_event_loop().run_until_complete(
             spawn_greenlet(_greenlet),
         )
+
+
+class TestSynchronize(unittest.TestCase):
+
+    @asyncio.coroutine
+    def _sample(self, pass_back):
+        return pass_back
+
+    def _simple(self, pass_back):
+        return pass_back
+
+    def test_conversion(self):
+        from aiopyramid.helpers import synchronize
+        from aiopyramid.helpers import is_generator
+
+        syncer = synchronize(strict=True)
+        self.assertRaises(ConfigurationError, syncer, self._simple)
+        self.assertFalse(is_generator(syncer(self._sample)))
+
+    def test_scope_error(self):
+        from aiopyramid.exceptions import ScopeError
+        from aiopyramid.helpers import synchronize, spawn_greenlet
+
+        syncer = synchronize(strict=True)
+        synced = syncer(self._sample)
+        self.assertRaises(ScopeError, synced, 'val')
+
+        five = asyncio.get_event_loop().run_until_complete(
+            spawn_greenlet(synced, 5),
+        )
+        self.assertEqual(five, 5)
+
+        syncer = synchronize(strict=False)
+        synced = syncer(self._sample)
+        self.assertTrue(asyncio.iscoroutine(synced('val')))
