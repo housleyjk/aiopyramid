@@ -8,8 +8,8 @@ log = logging.getLogger(__name__)
 
 def coroutine_logger_tween_factory(handler, registry):
     """
-    Example of an asyncronous tween that delegates a syncronous function to
-    a child thread. This tween asyncronously logs all requests and responses.
+    Example of an asynchronous tween that delegates a synchronous function to
+    a child thread. This tween asynchronously logs all requests and responses.
     """
 
     @asyncio.coroutine

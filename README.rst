@@ -1,7 +1,7 @@
 Introduction
 ============
 
-A library for leveraging pyramid infrastructure asyncronously using the new ``asyncio``.
+A library for leveraging pyramid infrastructure asynchronously using the new ``asyncio``.
 
 See `Approach`_ for why I made this library.
 
@@ -31,10 +31,10 @@ Features
 ========
 ``Aiopyramid`` provides tools for making web applications with ``pyramid`` and ``aysncio``.
 It will not necessarily make your application run faster Instead, it gives you some tools
-and patterns to build an application on asyncronous servers.
-Bear in mind that you will need to use asyncronous libraries for io where appropriate.
+and patterns to build an application on asynchronous servers.
+Bear in mind that you will need to use asynchronous libraries for io where appropriate.
 
-Asyncronous Views
+Asynchronous Views
 -----------------
 ``Aiopyramid`` provides three view mappers for calling ``view callables``:
 
@@ -45,7 +45,7 @@ Asyncronous Views
 When you include ``Aiopyramid``,
 the default view mapper is replaced with the ``CoroutineOrExecutorMapper``
 which detects whether your ``view_callable`` is a coroutine and does a ``yield from`` to
-call it asyncronously. If your ``view_callable`` is not a coroutine, it will run it in a
+call it asynchronously. If your ``view_callable`` is not a coroutine, it will run it in a
 separate thread to avoid blocking the thread with the main loop. ``Asyncio`` is not thread-safe,
 so you will need to guarantee that either in memory resources are not shared between ``view callables``
 running in the executor or that such resources are synchronized.
@@ -54,16 +54,16 @@ This means that you should not need to change existing views. Also,
 it is possible to restore the default view mapper, but note that this will mean that
 coroutine views that do not specify ``CoroutineMapper`` as their view mapper will fail.
 
-Asyncronous Tweens
+Asynchronous Tweens
 ------------------
 ``Pyramid`` allows you to write `tweens` which wrap the request/response chain. Most
-existing `tweens` expect those `tweens` above and below them to run syncronously. Therefore,
-if you have a tween that needs to run asyncronously (e.g. it looks up some data from a
+existing `tweens` expect those `tweens` above and below them to run synchronously. Therefore,
+if you have a tween that needs to run asynchronously (e.g. it looks up some data from a
 database for each request), then you will need to write that `tween` so that it can wait
 without other `tweens` needing explicitly to ``yield from`` it. An example of this pattern
 is provided in ``aiopyramid.tweens``.
 
-Asyncronous Traversal
+Asynchronous Traversal
 ---------------------
 When using ``pyramid``'s traversal view lookup, it is often the case that you will want to
 make some io calls to a database or storage when traversing via `__getitem__`. ``Aiopyramid``
@@ -81,7 +81,7 @@ projects/pyramid/en/1.0-branch/narr/hooks.html#changing-the-traverser>`_ like so
 
 Server Support
 --------------
-``Aiopyramid`` supports both asyncronous `gunicorn`_ and the `uWSGI asyncio plugin`_.
+``Aiopyramid`` supports both asynchronous `gunicorn`_ and the `uWSGI asyncio plugin`_.
 
 Example `gunicorn`_ config:
 
@@ -198,7 +198,7 @@ Approach
 ========
 
 `TL;DR` I chose to make a new ``asyncio`` extension because I wanted to support `uWSGI`_ and
-existing non-asyncronous extensions such as `pyramid_debugtoolbar`_.
+existing non-asynchronous extensions such as `pyramid_debugtoolbar`_.
 
 ``Aiopyramid`` was originally based on `pyramid_asyncio`_, but I followed a different approach
 for the following reasons:
@@ -211,20 +211,20 @@ for the following reasons:
 On the other hand ``aiopyramid`` is designed to follow these principles:
 
     -   ``Aiopyramid`` should extend ``pyramid`` through existing ``pyramid`` mechanisms where possible.
-    -    Asyncronous code that should be wrapped so that existing callers can treat it as syncronous code.
+    -    Asynchronous code that should be wrapped so that existing callers can treat it as synchronous code.
 
 The first principle is one of the reasons why I used view mappers rather than patching the router.
 View mappers are a mechanism already in place to handle how views are called. We don't need to rewrite
 vast parts of ``pyramid`` to run a view in the ``asyncio`` event loop. Yes, ``pyramid`` is that awesome.
 
 The second principle is what allows ``aiopyramid`` to support existing extensions. The goal is to isolate
-asyncronous code from code that expects a syncronous response. Those methods that already exist in ``pyramid``
+asynchronous code from code that expects a synchronous response. Those methods that already exist in ``pyramid``
 should not be rewritten as coroutines because we don't know who will
 try to call them as regular methods.
 
 Most of the ``pyramid`` framework does not run io blocking code. So, it is not actually necessary to change the
-framework itself. Instead we need tools for making application code asyncronous. It should be possible
-to run an existing url dispatch application asyncronously without modification. Blocking code will naturally end
+framework itself. Instead we need tools for making application code asynchronous. It should be possible
+to run an existing url dispatch application asynchronously without modification. Blocking code will naturally end
 up being run in a separate thread via the ``asyncio run_in_executor`` method. This allows you to optimize
 only those highly concurrent views in your application or add in websocket support without needing to refactor
 all of the code.

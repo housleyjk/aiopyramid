@@ -3,11 +3,13 @@ Changes
 
 .. :changelog:
 
-0.2.2 (2014-09-25)
+0.2.2 (2014-09-26)
 ------------------
     - Update example tween to work with gunicorn
     - Add kwargs support to helpers
     - Add tox for testing
+    - Add decorator `synchronize` for wrapping coroutines
+    - Refactored mappers and tween example to use `synchronize`
 
 0.2.1 (2014-09-15)
 ------------------
@@ -38,7 +40,7 @@ Changes
     - Moving to an extension-based rather than patched-based approach
     - removed most code based on pyramid_asyncio except testing and scaffolds
     - added view mappers for running views in asyncio
-    - added example tween that can come before or after syncronous tweens
+    - added example tween that can come before or after synchronous tweens
 
 0.0.2 (2014-07-22)
 ------------------

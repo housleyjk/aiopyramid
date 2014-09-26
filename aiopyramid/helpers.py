@@ -1,7 +1,9 @@
 import asyncio
 import inspect
+import functools
 
 import greenlet
+from pyramid.exceptions import ConfigurationError
 
 
 def is_generator(func):
@@ -48,3 +50,30 @@ def run_in_greenlet(back, future, func, *args, **kwargs):
         future.set_result(result)
     finally:
         return back.switch()
+
+
+def synchronize(coroutine_func, safe=True):
+    """
+    Decorator for transforming an async coroutine function into a regular
+    function relying on the `aiopyramid` architecture to schedule
+    the coroutine and obtain the result.
+    """
+
+    if safe and not asyncio.iscoroutinefunction(coroutine_func):
+        raise ConfigurationError(
+            'Attempted to synchronize a non-coroutine.'.format(coroutine_func)
+        )
+
+    @functools.wraps(coroutine_func)
+    def _wrapped_coroutine(*args, **kwargs):
+
+        this = greenlet.getcurrent()
+        future = asyncio.Future()
+        sub_task = asyncio.async(
+            run_in_greenlet(this, future, coroutine_func, *args, **kwargs)
+        )
+        while not future.done():
+            this.parent.switch(sub_task)
+        return future.result()
+
+    return _wrapped_coroutine
