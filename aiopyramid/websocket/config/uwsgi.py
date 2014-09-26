@@ -28,6 +28,7 @@ class UWSGIWebsocket:
 
     @asyncio.coroutine
     def recv(self):
+        print('uswsgi recv')
         return (yield from self.q_in.get())
 
     @asyncio.coroutine
@@ -65,6 +66,10 @@ class UWSGIWebsocketMapper(AsyncioMapperBase):
                 uwsgi_recv_msg,
                 this
             )
+
+            # NOTE: don't use synchronize because we aren't waiting
+            # for this future, instead we are using the reader to return
+            # to the child greenlet.
 
             future = asyncio.Future()
             asyncio.async(

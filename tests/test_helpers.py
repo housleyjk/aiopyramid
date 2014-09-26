@@ -205,3 +205,19 @@ class TestSynchronize(unittest.TestCase):
         syncer = synchronize(strict=False)
         synced = syncer(self._sample)
         self.assertTrue(asyncio.iscoroutine(synced('val')))
+
+    def test_as_decorator(self):
+        from aiopyramid.helpers import synchronize, spawn_greenlet
+        from aiopyramid.exceptions import ScopeError
+
+        @synchronize()
+        @asyncio.coroutine
+        def _synced(pass_back):
+            yield
+            return pass_back
+
+        self.assertRaises(ScopeError, _synced, 'val')
+        twelve = asyncio.get_event_loop().run_until_complete(
+            spawn_greenlet(_synced, 12),
+        )
+        self.assertEqual(twelve, 12)

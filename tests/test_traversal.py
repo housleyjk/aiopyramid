@@ -8,7 +8,7 @@ from aiopyramid.traversal import AsyncioTraverser
 from aiopyramid.helpers import spawn_greenlet
 
 
-class TestResource:
+class DummyResource:
     """ Dummy resource for testing async traversal. """
 
     def __init__(self, name, parent):
@@ -37,8 +37,8 @@ class TestTraversal(unittest.TestCase):
     def test_async_traversed_length(self):
         with testing.testConfig() as config:
             config.add_traverser(AsyncioTraverser)
-            resource = TestResource('root', None)
-            resource.add_child('cat', TestResource)
+            resource = DummyResource('root', None)
+            resource.add_child('cat', DummyResource)
             out = self.loop.run_until_complete(
                 spawn_greenlet(traverse, resource, ['cat']),
             )
@@ -47,8 +47,8 @@ class TestTraversal(unittest.TestCase):
     def test_async_root(self):
         with testing.testConfig() as config:
             config.add_traverser(AsyncioTraverser)
-            resource = TestResource('root', None)
-            resource.add_child('cat', TestResource)
+            resource = DummyResource('root', None)
+            resource.add_child('cat', DummyResource)
             out = self.loop.run_until_complete(
                 spawn_greenlet(traverse, resource, ['']),
             )
@@ -57,12 +57,12 @@ class TestTraversal(unittest.TestCase):
     def test_async_depth(self):
         with testing.testConfig() as config:
             config.add_traverser(AsyncioTraverser)
-            resource = TestResource('root', None)
-            resource.add_child('cat', TestResource)
+            resource = DummyResource('root', None)
+            resource.add_child('cat', DummyResource)
             out = self.loop.run_until_complete(
                 spawn_greenlet(traverse, resource, ['cat']),
             )
-            out['context'].add_child('dog', TestResource)
+            out['context'].add_child('dog', DummyResource)
             out = self.loop.run_until_complete(
                 spawn_greenlet(traverse, resource, ['cat', 'dog']),
             )
@@ -71,8 +71,8 @@ class TestTraversal(unittest.TestCase):
     def test_async_view_name(self):
         with testing.testConfig() as config:
             config.add_traverser(AsyncioTraverser)
-            resource = TestResource('root', None)
-            resource.add_child('cat', TestResource)
+            resource = DummyResource('root', None)
+            resource.add_child('cat', DummyResource)
             out = self.loop.run_until_complete(
                 spawn_greenlet(traverse, resource, ['cat', 'mouse']),
             )

@@ -3,11 +3,10 @@ This module provides view mappers for running views in asyncio.
 """
 import asyncio
 
-import greenlet
 from pyramid.config.views import DefaultViewMapper
 from pyramid.exceptions import ConfigurationError
 
-from .helpers import run_in_greenlet, is_generator
+from .helpers import synchronize, is_generator
 
 
 class AsyncioMapperBase(DefaultViewMapper):
@@ -17,19 +16,13 @@ class AsyncioMapperBase(DefaultViewMapper):
 
     def run_in_coroutine_view(self, view):
 
-        def coroutine_view(context, request):
-            this = greenlet.getcurrent()
-            future = asyncio.Future()
-            sub_task = asyncio.async(
-                run_in_greenlet(this, future, view, context, request)
-            )
-            while not future.done():
-                this.parent.switch(sub_task)
-            return future.result()
+        synchronizer = synchronize()
 
-        return coroutine_view
+        return synchronizer(view)
 
     def run_in_executor_view(self, view):
+
+        synchronizer = synchronize(strict=False)
 
         def executor_view(context, request):
             try:
@@ -37,22 +30,8 @@ class AsyncioMapperBase(DefaultViewMapper):
                 # remove the old wsgi.file_wrapper for uwsgi
                 request.environ.pop('wsgi.file_wrapper')
             finally:
-                this = greenlet.getcurrent()
-                future = asyncio.Future()
-                sub_task = asyncio.async(
-                    run_in_greenlet(
-                        this,
-                        future,
-                        asyncio.get_event_loop().run_in_executor,
-                        None,
-                        view,
-                        context,
-                        request,
-                    )
-                )
-                while not future.done():
-                    this.parent.switch(sub_task)
-                return future.result()
+                exe = synchronizer(asyncio.get_event_loop().run_in_executor)
+                return exe(None, view, context, request)
 
         return executor_view
 

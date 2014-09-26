@@ -1,9 +1,6 @@
 import asyncio
-import logging
 
-import greenlet
-
-log = logging.getLogger(__name__)
+from .helpers import synchronize
 
 
 def coroutine_logger_tween_factory(handler, registry):
@@ -12,49 +9,36 @@ def coroutine_logger_tween_factory(handler, registry):
     a child thread. This tween asynchronously logs all requests and responses.
     """
 
+    # We use the synchronize decorator because we will call this
+    # coroutine from a normal python context
+    @synchronize()
+    # this is a coroutine
     @asyncio.coroutine
-    def _async_log(back, content):
-        # log doesn't really need to be run in a separate thread
+    def _async_print(content):
+        # print doesn't really need to be run in a separate thread
         # but it works for demonstration purposes
-        # NOTE: this does not do exception handling, which means
-        # that no 500 error view will be run. The exception needs to
-        # be reraised in the request greenlet. See helpers.run_in_greenlet for
-        # an example.
 
         yield from asyncio.get_event_loop().run_in_executor(
             None,
-            log.info,
+            print,
             content
         )
-        # return in case there is a subtask
-        return back.switch()
 
     def coroutine_logger_tween(request):
-        # get this greenlet
-        this = greenlet.getcurrent()
+        # The following calls are guaranteed to happen in order but they do not
+        # block the event loop
 
-        # queue request logging
-        sub_task = asyncio.async(_async_log(this, request))
-
-        # switch to parent so that aio loop runs
-        # (waiting for subtask if gunicorn)
-        this.parent.switch(sub_task)
-
-        # when request is logged, it will switch back to this
+        # print the request on the aio event loop without needing to say yield
+        # at this point, other coroutines and requests can be handled
+        _async_print(request)
 
         # get response, this should be done in this greenlet
         # and not as a coroutine because this will call
-        # the next tween
+        # the next tween and subsequently yield if necessary
         response = handler(request)
 
-        # queue respone logging
-        sub_task = asyncio.async(_async_log(this, response))
-
-        # switch to parent so that aio loop runs
-        # (waiting for subtask if gunicorn)
-        this.parent.switch(sub_task)
-
-        # when response is logged, it will switch back to this
+        # print the response on the aio event loop
+        _async_print(request)
 
         # return response after logging is done
         return response

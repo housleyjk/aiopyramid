@@ -1,6 +1,5 @@
 import asyncio
 
-import greenlet
 from pyramid.traversal import (
     ResourceTreeTraverser as TraverserBase,
     is_nonstr_iter,
@@ -10,11 +9,12 @@ from pyramid.exceptions import URLDecodeError
 from pyramid.interfaces import VH_ROOT_KEY
 from pyramid.compat import decode_path_info
 
-from .helpers import run_in_greenlet
+from .helpers import synchronize
 
 SLASH = "/"
 
 
+@synchronize()
 @asyncio.coroutine
 def traverse(
     i,
@@ -138,27 +138,17 @@ class AsyncioTraverser(TraverserBase):
             i = 0
             view_selector = self.VIEW_SELECTOR
             vpath_tuple = split_path_info(vpath)
-
-            this = greenlet.getcurrent()
-            future = asyncio.Future()
-            sub_task = asyncio.async(
-                run_in_greenlet(
-                    this,
-                    future,
-                    traverse,
-                    i,
-                    ob,
-                    view_selector,
-                    vpath_tuple,
-                    vroot_idx,
-                    vroot,
-                    vroot_tuple,
-                    root,
-                    subpath,
-                )
+            return traverse(
+                i,
+                ob,
+                view_selector,
+                vpath_tuple,
+                vroot_idx,
+                vroot,
+                vroot_tuple,
+                root,
+                subpath,
             )
-            this.parent.switch(sub_task)
-            return future.result()
 
         return {
             'context': ob,

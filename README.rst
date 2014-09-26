@@ -35,7 +35,7 @@ and patterns to build an application on asynchronous servers.
 Bear in mind that you will need to use asynchronous libraries for io where appropriate.
 
 Asynchronous Views
------------------
+------------------
 ``Aiopyramid`` provides three view mappers for calling ``view callables``:
 
     * ``CoroutineOrExecutorMapper`` maps views to coroutines or separate threads
@@ -55,7 +55,7 @@ it is possible to restore the default view mapper, but note that this will mean 
 coroutine views that do not specify ``CoroutineMapper`` as their view mapper will fail.
 
 Asynchronous Tweens
-------------------
+-------------------
 ``Pyramid`` allows you to write `tweens` which wrap the request/response chain. Most
 existing `tweens` expect those `tweens` above and below them to run synchronously. Therefore,
 if you have a tween that needs to run asynchronously (e.g. it looks up some data from a
@@ -64,7 +64,7 @@ without other `tweens` needing explicitly to ``yield from`` it. An example of th
 is provided in ``aiopyramid.tweens``.
 
 Asynchronous Traversal
----------------------
+----------------------
 When using ``pyramid``'s traversal view lookup, it is often the case that you will want to
 make some io calls to a database or storage when traversing via `__getitem__`. ``Aiopyramid``
 provides a custom traverser that allows for `__getitem__` to be an ``asyncio`` coroutine. To

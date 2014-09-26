@@ -59,12 +59,21 @@ def synchronize(strict=True):
     Decorator for transforming an async coroutine function into a regular
     function relying on the `aiopyramid` architecture to schedule
     the coroutine and obtain the result.
+
+    NOTE: Remeber to use () even when using the defaults.
+
+    @synchronize()
+    @asyncio.coroutine
+    def my_coroutine():
+        pass
     """
 
     def _wrapper(coroutine_func):
-        if not asyncio.iscoroutinefunction(coroutine_func):
+        if strict and not asyncio.iscoroutinefunction(coroutine_func):
             raise ConfigurationError(
-                'Attempted to synchronize a non-coroutine.'.format(coroutine_func)
+                'Attempted to synchronize a non-coroutine {}.'.format(
+                    coroutine_func
+                )
             )
 
         @functools.wraps(coroutine_func)
@@ -75,16 +84,18 @@ def synchronize(strict=True):
                 if strict:
                     raise ScopeError(
                         '''
-                        Synchronized coroutine {} called in the parent greenlet.
+                        Synchronized coroutine {} called in the parent
+                        greenlet.
 
-                        This is most likely because you called the synchronized coroutine
-                        inside of another coroutine. You need to yield from the coroutine
-                        directly without wrapping it in aiopyramid.helpers.synchronize.
+                        This is most likely because you called the synchronized
+                        coroutine inside of another coroutine. You need to
+                        yield from the coroutine directly without wrapping
+                        it in aiopyramid.helpers.synchronize.
 
-                        If you are calling this coroutine indirectly from a regular
-                        function and therefore cannot yield from it, then you need to run
-                        the first caller inside the parent coroutine inside a new greenlet
-                        using aiopyramid.helpers.spawn_greenlet.
+                        If you are calling this coroutine indirectly from
+                        a regular function and therefore cannot yield from it,
+                        then you need to run the first caller inside a new
+                        greenlet using aiopyramid.helpers.spawn_greenlet.
                         '''
                     )
                 else:
@@ -92,7 +103,13 @@ def synchronize(strict=True):
             else:
                 future = asyncio.Future()
                 sub_task = asyncio.async(
-                    run_in_greenlet(this, future, coroutine_func, *args, **kwargs)
+                    run_in_greenlet(
+                        this,
+                        future,
+                        coroutine_func,
+                        *args,
+                        **kwargs
+                    )
                 )
                 while not future.done():
                     this.parent.switch(sub_task)

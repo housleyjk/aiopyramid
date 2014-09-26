@@ -10,17 +10,25 @@ class WebsocketConnectionView:
 
     @asyncio.coroutine
     def __call__(self, ws):
+        print('called ws callable')
         self.ws = ws
+        print(self.ws)
         yield from self.on_open()
+        print('opened')
         while True:
             message = yield from self.ws.recv()
+            print('got', message)
             if message is None:
+                print('closing')
                 yield from self.on_close()
+                print('breaking')
                 break
+            print('firing on message')
             yield from self.on_message(message)
 
     @asyncio.coroutine
     def send(self, message):
+        print('sending', message)
         yield from self.ws.send(message)
 
     @asyncio.coroutine
