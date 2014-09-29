@@ -3,13 +3,14 @@ Changes
 
 .. :changelog:
 
-0.2.2 (2014-09-26)
+0.2.2 (2014-09-29)
 ------------------
     - Update example tween to work with gunicorn
     - Add kwargs support to helpers
     - Add tox for testing
     - Add decorator `synchronize` for wrapping coroutines
     - Refactored mappers and tween example to use `synchronize`
+    - Bug fixes
 
 0.2.1 (2014-09-15)
 ------------------

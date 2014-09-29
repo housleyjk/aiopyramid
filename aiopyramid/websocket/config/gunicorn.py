@@ -67,9 +67,12 @@ class WebsocketMapper(AsyncioMapperBase):
             def switch_protocols():
                 ws_protocol = websockets.WebSocketCommonProtocol()
                 transport = request.environ['async.writer'].transport
+                http_protocol = transport._protocol
                 transport._protocol = ws_protocol
                 ws_protocol.connection_made(transport)
-                asyncio.async(_ensure_ws_close(ws_protocol))
+                f = asyncio.async(_ensure_ws_close(ws_protocol))
+                f.add_done_callback(
+                    lambda f: http_protocol.connection_lost(f.exception()))
 
             response = SwitchProtocolsResponse(
                 request.environ,

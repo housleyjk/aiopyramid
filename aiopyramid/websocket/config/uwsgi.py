@@ -28,7 +28,6 @@ class UWSGIWebsocket:
 
     @asyncio.coroutine
     def recv(self):
-        print('uswsgi recv')
         return (yield from self.q_in.get())
 
     @asyncio.coroutine
@@ -80,6 +79,9 @@ class UWSGIWebsocketMapper(AsyncioMapperBase):
             this.parent.switch()
 
             while True:
+                if future.done():
+                    raise WebsocketClosed
+
                 # message in
                 if this.has_message:
                     this.has_message = False
@@ -91,9 +93,6 @@ class UWSGIWebsocketMapper(AsyncioMapperBase):
                     if msg or msg is None:
                         q_in.put_nowait(msg)
 
-                    if msg is None:
-                        break
-
                 # message out
                 if not q_out.empty():
                     msg = q_out.get_nowait()
@@ -101,13 +100,8 @@ class UWSGIWebsocketMapper(AsyncioMapperBase):
                         uwsgi.websocket_send(msg)
                     except OSError:
                         q_in.put_nowait(None)
-                        break
 
                 this.parent.switch()
-
-            # switch to close
-            this.parent.switch()
-            raise WebsocketClosed
 
         return websocket_view
 
