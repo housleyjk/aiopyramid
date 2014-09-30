@@ -3,7 +3,7 @@ Changes
 
 .. :changelog:
 
-0.2.2 (2014-09-29)
+0.2.2 (2014-09-30)
 ------------------
     - Update example tween to work with gunicorn
     - Add kwargs support to helpers
