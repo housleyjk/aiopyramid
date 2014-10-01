@@ -3,6 +3,10 @@ Changes
 
 .. :changelog:
 
+0.2.3 (2014-10-01)
+------------------
+    - Fix issue with `synchronize`
+
 0.2.2 (2014-09-30)
 ------------------
     - Update example tween to work with gunicorn
