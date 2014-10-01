@@ -193,8 +193,7 @@ class TestSynchronize(unittest.TestCase):
         from aiopyramid.exceptions import ScopeError
         from aiopyramid.helpers import synchronize, spawn_greenlet
 
-        syncer = synchronize(strict=True)
-        synced = syncer(self._sample)
+        synced = synchronize(self._sample)
         self.assertRaises(ScopeError, synced, 'val')
 
         five = asyncio.get_event_loop().run_until_complete(
@@ -202,15 +201,14 @@ class TestSynchronize(unittest.TestCase):
         )
         self.assertEqual(five, 5)
 
-        syncer = synchronize(strict=False)
-        synced = syncer(self._sample)
+        synced = synchronize(self._sample, strict=False)
         self.assertTrue(asyncio.iscoroutine(synced('val')))
 
     def test_as_decorator(self):
         from aiopyramid.helpers import synchronize, spawn_greenlet
         from aiopyramid.exceptions import ScopeError
 
-        @synchronize()
+        @synchronize
         @asyncio.coroutine
         def _synced(pass_back):
             yield

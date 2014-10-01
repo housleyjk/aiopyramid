@@ -54,15 +54,13 @@ def run_in_greenlet(back, future, func, *args, **kwargs):
         return back.switch()
 
 
-def synchronize(strict=True):
+def synchronize(*args, strict=True):
     """
     Decorator for transforming an async coroutine function into a regular
     function relying on the `aiopyramid` architecture to schedule
     the coroutine and obtain the result.
 
-    NOTE: Remeber to use () even when using the defaults.
-
-    @synchronize()
+    @synchronize
     @asyncio.coroutine
     def my_coroutine():
         pass
@@ -117,4 +115,8 @@ def synchronize(strict=True):
 
         return _wrapped_coroutine
 
-    return _wrapper
+    try:
+        coroutine_func = args[0]
+        return _wrapper(coroutine_func)
+    except IndexError:
+        return _wrapper

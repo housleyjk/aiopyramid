@@ -14,7 +14,7 @@ from .helpers import synchronize
 SLASH = "/"
 
 
-@synchronize()
+@synchronize
 @asyncio.coroutine
 def traverse(
     i,

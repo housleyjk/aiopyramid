@@ -11,7 +11,7 @@ def coroutine_logger_tween_factory(handler, registry):
 
     # We use the synchronize decorator because we will call this
     # coroutine from a normal python context
-    @synchronize()
+    @synchronize
     # this is a coroutine
     @asyncio.coroutine
     def _async_print(content):
