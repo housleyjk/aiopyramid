@@ -65,14 +65,16 @@ class WebsocketMapper(AsyncioMapperBase):
                 yield from ws.close()
 
             def switch_protocols():
+                # TODO: Determine if there is a more standard way to do this
                 ws_protocol = websockets.WebSocketCommonProtocol()
                 transport = request.environ['async.writer'].transport
-                http_protocol = transport._protocol
+
+                http_protocol = request.environ['async.protocol']
+                http_protocol.connection_lost(None)
+
                 transport._protocol = ws_protocol
                 ws_protocol.connection_made(transport)
-                f = asyncio.async(_ensure_ws_close(ws_protocol))
-                f.add_done_callback(
-                    lambda f: http_protocol.connection_lost(f.exception()))
+                asyncio.async(_ensure_ws_close(ws_protocol))
 
             response = SwitchProtocolsResponse(
                 request.environ,

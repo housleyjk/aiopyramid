@@ -22,6 +22,9 @@ class AiopyramidHttpServerProtocol(WSGIServerHttpProtocol):
             payload = wsgiinput
 
         environ = self.create_wsgi_environ(message, payload)
+        # add a reference to this for switching protocols
+        environ['async.protocol'] = self
+
         response = self.create_wsgi_response(message)
 
         riter = yield from spawn_greenlet(
