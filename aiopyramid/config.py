@@ -2,6 +2,7 @@
 This module provides view mappers for running views in asyncio.
 """
 import asyncio
+import inspect
 
 from pyramid.config.views import DefaultViewMapper
 from pyramid.exceptions import ConfigurationError
@@ -37,7 +38,9 @@ class AsyncioMapperBase(DefaultViewMapper):
 class CoroutineMapper(AsyncioMapperBase):
 
     def __call__(self, view):
-        if not asyncio.iscoroutinefunction(view) and is_generator(view):
+        if not asyncio.iscoroutinefunction(view) and (
+            is_generator(view) or inspect.isclass(view)
+        ):
             view = asyncio.coroutine(view)
         else:
             raise ConfigurationError(
@@ -51,7 +54,9 @@ class CoroutineMapper(AsyncioMapperBase):
 class ExecutorMapper(AsyncioMapperBase):
 
     def __call__(self, view):
-        if asyncio.iscoroutinefunction(view) or is_generator(view):
+        if asyncio.iscoroutinefunction(view) or asyncio.iscoroutinefunction(
+            getattr(view, '__call__', None)
+        ):
             raise ConfigurationError(
                 'Coroutine {} mapped to executor.'.format(view)
             )
@@ -62,13 +67,14 @@ class ExecutorMapper(AsyncioMapperBase):
 class CoroutineOrExecutorMapper(AsyncioMapperBase):
 
     def __call__(self, view):
-
         # TODO: figure out how to avoid redundancy while allowing for
         # check in synchronize
         if asyncio.iscoroutinefunction(view):
             view = super().__call__(view)
             wrapper = self.run_in_coroutine_view
-        elif is_generator(view):
+        elif is_generator(view) or is_generator(
+            getattr(view, '__call__', None)
+        ):
             view = super().__call__(view)
             view = asyncio.coroutine(view)
             wrapper = self.run_in_coroutine_view
