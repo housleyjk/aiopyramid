@@ -3,6 +3,11 @@ Changes
 
 .. :changelog:
 
+0.2.4 (2014-10-06)
+------------------
+    - Fix issue with gunicorn websockets
+    - Fix issue with class-based view mappers
+
 0.2.3 (2014-10-01)
 ------------------
     - Fix issue with `synchronize`
