@@ -60,10 +60,12 @@ def synchronize(*args, strict=True):
     function relying on the `aiopyramid` architecture to schedule
     the coroutine and obtain the result.
 
-    @synchronize
-    @asyncio.coroutine
-    def my_coroutine():
-        pass
+    .. code-block:: python
+
+        @synchronize
+        @asyncio.coroutine
+        def my_coroutine():
+            ... code that yields
     """
 
     def _wrapper(coroutine_func):

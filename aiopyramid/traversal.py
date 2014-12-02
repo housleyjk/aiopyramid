@@ -27,6 +27,11 @@ def traverse(
     root,
     subpath,
 ):
+    """
+    A version of :func:`pyramid.traversal.traverse` that expects `__getitem__`
+    to be a :term:`coroutine`.
+    """
+
     for segment in vpath_tuple:
         if segment[:2] == view_selector:
             return {

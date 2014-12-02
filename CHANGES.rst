@@ -3,6 +3,11 @@ Changes
 
 .. :changelog:
 
+0.2.5 (2014-12-01)
+------------------
+    - Add sphinx
+    - Migrate README to sphinx docs
+
 0.2.4 (2014-10-06)
 ------------------
     - Fix issue with gunicorn websockets
