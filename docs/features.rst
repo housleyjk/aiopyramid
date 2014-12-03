@@ -9,8 +9,8 @@ Asynchronous Views
 ------------------
 ``Aiopyramid`` provides three view mappers for calling :term:`view callables <view callable>`:
 
-    * :class:`~aiopyramid.config.CoroutineOrExecutorMapper` maps views to :term:`coroutines` or separate threads
-    * :class:`~aiopyramid.config.CoroutineMapper` maps views to :term:`coroutines`
+    * :class:`~aiopyramid.config.CoroutineOrExecutorMapper` maps views to :term:`coroutines <coroutine>` or separate threads
+    * :class:`~aiopyramid.config.CoroutineMapper` maps views to :term:`coroutines <coroutine>`
     * :class:`~aiopyramid.config.ExecutorMapper` maps views to separate threads
 
 When you include ``Aiopyramid``,
@@ -18,8 +18,8 @@ the default view mapper is replaced with the :class:`~aiopyramid.config.Coroutin
 which detects whether your :term:`view callable` is a coroutine and does a ``yield from`` to
 call it asynchronously. If your :term:`view callable` is not a :term:`coroutine`, it will run it in a
 separate thread to avoid blocking the thread with the main loop. :mod:`asyncio` is not thread-safe,
-so you will need to guarantee that either in memory resources are not shared between :term:`view callables <view callable>`
-running in the executor or that such resources are synchronized.
+so you will need to guarantee that either in memory resources are not shared between
+:term:`view callables <view callable>` running in the executor or that such resources are synchronized.
 
 This means that you should not necessarily have to change existing views. Also,
 it is possible to restore the default view mapper, but note that this will mean that

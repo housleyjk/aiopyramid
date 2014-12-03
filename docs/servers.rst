@@ -24,7 +24,9 @@ Example `uWSGI`_ config:
         asyncio = 50
         greenlet
 
+For those setting up ``Aiopyramid`` on a Mac, Ander Ustarroz's `tutorial`_ may prove useful.
 
 .. _gunicorn: http://gunicorn.org
 .. _uWSGI: https://github.com/unbit/uwsgi
 .. _uWSGI asyncio plugin: http://uwsgi-docs.readthedocs.org/en/latest/asyncio.html
+.. _tutorial: http://www.developerfiles.com/installing-uwsgi-with-asyncio-on-mac-os-x-10-10-yosemite/

@@ -10,8 +10,6 @@ Bear in mind that you will need to use asynchronous libraries for io where appro
 
 Since this library is built on relatively new technology, it is not intended for production use.
 
-See :doc:`approach` for why I made this library.
-
 Getting Started
 ---------------
 
@@ -43,9 +41,16 @@ Contents
     websockets
     servers
     tests
-    approach 
+    approach
 
 
+Contributors
+------------
+
+- Jason Housley
+- Guillaume Gauvrit
+- Tiago Requeijo
+- Ander Ustarroz
 
 Indices and tables
 ==================
@@ -53,6 +58,7 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+* :doc:`glossary`
 
 .. _gunicorn: http://gunicorn.org
 .. _uWSGI: https://github.com/unbit/uwsgi
