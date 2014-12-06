@@ -46,7 +46,6 @@ Contents
     servers
     tests
     approach
-    modules
 
 
 Contributors
