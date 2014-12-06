@@ -2,7 +2,7 @@ import asyncio
 
 
 class WebsocketConnectionView:
-    """ :term:`view_callable` for websocket connections. """
+    """ :term:`view callable` for websocket connections. """
 
     def __init__(self, context, request):
         self.context = context
