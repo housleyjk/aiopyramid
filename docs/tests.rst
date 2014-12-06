@@ -1,7 +1,7 @@
 Tests
 =====
 
-Core functionality is backed by tests. The recommended test runner is `pytest`_. To run the
+Core functionality is backed by tests. The ``Aiopyramid`` requires `pytest`_. To run the
 tests, grab the code on `github`_, install `pytest`_, and run it like so:
 
 ::

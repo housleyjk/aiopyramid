@@ -1,3 +1,5 @@
+.. _architecture:
+
 Architecture
 ============
 
@@ -55,7 +57,7 @@ Please feel free to use this in other :mod:`asyncio` projects that don't use :re
 because it's awesome.
 
 To avoid confusion, it is worth making explicit the fact that this approach is for incorporating code that is
-fast and non-blocking itself but needs to call a coroutine to do some blocking task. Don't try to use this to
+fast and non-blocking itself but needs to call a coroutine to do some io. Don't try to use this to
 call long-running or blocking Python functions. Instead, use `run_in_executor`_, which is what ``Aiopyramid``
 does by default with :term:`view callables <view callable>` that don't appear to be :term:`coroutines <coroutine>`.
 
@@ -69,7 +71,7 @@ for the following reasons:
     -   The `pyramid_asyncio`_ library depends on patches made to the :ref:`Pyramid <pyramid:index>` router that prevent it
         from working with the `uWSGI asyncio plugin`_.
     -   The `pyramid_asyncio`_ rewrites various parts of :ref:`Pyramid <pyramid:index>`,
-        including tweens, to expect :term:`coroutins <coroutine>` from :ref:`Pyramid <pyramid:index>` internals.
+        including tweens, to expect :term:`coroutines <coroutine>` from :ref:`Pyramid <pyramid:index>` internals.
 
 On the other hand ``Aiopyramid`` is designed to follow these principles:
 
@@ -79,10 +81,10 @@ On the other hand ``Aiopyramid`` is designed to follow these principles:
         to call out to some function that blocks (in other words, the programmer forgets to wrap long-running calls in `run_in_executor`_).
         So, frameworks should leave the determination of what code is safe to the programmer and instead provide tools for
         programmers to make educated decisions about what Python libraries can be used on an asynchronous server. Following the
-        :ref:`Pyramid <pyramid:index>` philosophy, frameworks should get out of the way.
+        :ref:`Pyramid <pyramid:index>` philosophy, frameworks should not get in the way.
 
-The first principle is one of the reasons why I used view mappers rather than patching the router.
-View mappers are a mechanism already in place to handle how views are called. We don't need to rewrite
+The first principle is one of the reasons why I used :term:`view mappers <view mapper>` rather than patching the router.
+:term:`View mappers <view mapper>` are a mechanism already in place to handle how views are called. We don't need to rewrite
 vast parts of :ref:`Pyramid <pyramid:index>` to run a view in the :mod:`asyncio` event loop.
 Yes, :ref:`Pyramid <pyramid:index>` is that awesome.
 
@@ -92,7 +94,7 @@ should not be rewritten as :term:`coroutines <coroutine>` because we don't know 
 
 Most of the :ref:`Pyramid <pyramid:index>` framework does not run io blocking code. So, it is not actually necessary to change the
 framework itself. Instead we need tools for making application code asynchronous. It should be possible
-to run an existing url dispatch application asynchronously without modification. Blocking code will naturally end
+to run an existing simple url dispatch application asynchronously without modification. Blocking code will naturally end
 up being run in a separate thread via the `run_in_executor`_ method. This allows you to optimize
 only those highly concurrent views in your application or add in websocket support without needing to refactor
 all of the code.
@@ -108,9 +110,10 @@ For example, include the following in your application's constructor:
     ...
     asyncio.get_event_loop().set_default_executor(ThreadPoolExecutor(max_workers=150))
 
-It should be noted that ``Aiopyramid`` is not thread-safe by nature. You will need to ensure that in memory
-resources are not modified by multiple non-coroutine :term:`view callables <view callable>`. For most existing applications, this
-should not be a problem.
+.. note::
+    It should be noted that ``Aiopyramid`` is not thread-safe by nature. You will need to ensure that in memory
+    resources are not modified by multiple non-coroutine :term:`view callables <view callable>`. For most existing applications, this
+    should not be a problem.
 
 .. _uWSGI: https://github.com/unbit/uwsgi
 .. _pyramid_debugtoolbar: https://github.com/Pylons/pyramid_debugtoolbar

@@ -1,11 +1,29 @@
 import asyncio
 import inspect
 import functools
+import logging
 
 import greenlet
 from pyramid.exceptions import ConfigurationError
 
 from .exceptions import ScopeError
+
+SCOPE_ERROR_MESSAGE = '''
+Synchronized coroutine {} called in the parent
+greenlet.
+
+This is most likely because you called the synchronized
+coroutine inside of another coroutine. You need to
+yield from the coroutine directly without wrapping
+it in aiopyramid.helpers.synchronize.
+
+If you are calling this coroutine indirectly from
+a regular function and therefore cannot yield from it,
+then you need to run the first caller inside a new
+greenlet using aiopyramid.helpers.spawn_greenlet.
+'''
+
+log = logging.getLogger(__name__)
 
 
 def is_generator(func):
@@ -83,20 +101,7 @@ def synchronize(*args, strict=True):
             if this.parent is None:
                 if strict:
                     raise ScopeError(
-                        '''
-                        Synchronized coroutine {} called in the parent
-                        greenlet.
-
-                        This is most likely because you called the synchronized
-                        coroutine inside of another coroutine. You need to
-                        yield from the coroutine directly without wrapping
-                        it in aiopyramid.helpers.synchronize.
-
-                        If you are calling this coroutine indirectly from
-                        a regular function and therefore cannot yield from it,
-                        then you need to run the first caller inside a new
-                        greenlet using aiopyramid.helpers.spawn_greenlet.
-                        '''
+                        SCOPE_ERROR_MESSAGE.format(coroutine_func)
                     )
                 else:
                     return coroutine_func(*args, **kwargs)
@@ -122,3 +127,32 @@ def synchronize(*args, strict=True):
         return _wrapper(coroutine_func)
     except IndexError:
         return _wrapper
+
+
+def spawn_greenlet_on_scope_error(func):
+    """
+    Wraps a callable handling any
+    :class:`ScopeErrors <~aiopyramid.exceptions.ScopeError>` that may
+    occur because the callable is called from inside of a :term:`coroutine`.
+
+    If no :class:`~aiopyramid.exceptions.ScopeError` occurs, the callable is
+    executed normally and return arguments are passed through, otherwise, when
+    a :class:`~aiopyramid.exceptions.ScopeError` does occur, a coroutine to
+    retrieve the result of the callable is returned instead.
+    """
+
+    @functools.wraps(func)
+    def _run_or_return_future(*args, **kwargs):
+        this = greenlet.getcurrent()
+        # Check if we should see a ScopeError
+        if this.parent is None:
+            return spawn_greenlet(func, *args, **kwargs)
+        else:
+            try:
+                return func(*args, **kwargs)
+            except ScopeError:
+                # ScopeError generated in multiple levels of indirection
+                log.warn('Unexpected ScopeError encountered.')
+                return spawn_greenlet(func, *args, **kwargs)
+
+    return _run_or_return_future

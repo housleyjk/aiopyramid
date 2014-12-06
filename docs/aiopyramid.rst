@@ -41,9 +41,6 @@ aiopyramid.traversal module
 ---------------------------
 
 .. automodule:: aiopyramid.traversal
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 aiopyramid.tweens module
 ------------------------

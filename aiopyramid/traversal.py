@@ -1,3 +1,12 @@
+"""
+The aiopyramid.traversal module is deprecated, use aiopyramid.helpers.synchronize instead.
+See http://aiopyramid.readthedocs.org/en/latest/features.html#traversal.
+"""  # noqa
+
+import warnings
+warnings.warn(__doc__, DeprecationWarning)
+
+
 import asyncio
 
 from pyramid.traversal import (

@@ -1,3 +1,11 @@
+"""
+The aiopyramid.tweens module is deprecated. See example in the docs:
+http://aiopyramid.readthedocs.org/en/latest/features.html#tweens.
+"""
+
+import warnings
+warnings.warn(__doc__, DeprecationWarning)
+
 import asyncio
 
 from .helpers import synchronize

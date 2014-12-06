@@ -3,10 +3,13 @@ Changes
 
 .. :changelog:
 
-0.2.5 (2014-12-01)
+0.3.0 (2014-12-06)
 ------------------
     - Add sphinx
     - Migrate README to sphinx docs
+    - Add helpers for authentication
+    - Deprecated aiopyramid.traversal, use aiopyramid.helpers.synchronize
+    - Deprecated aiopyramid.tweens, moved examples to docs
 
 0.2.4 (2014-10-06)
 ------------------
