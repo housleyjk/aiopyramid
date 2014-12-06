@@ -1,5 +1,5 @@
-aiopyramid package
-==================
+aiopyramid
+==========
 
 Subpackages
 -----------
@@ -7,8 +7,15 @@ Subpackages
 .. toctree::
 
     aiopyramid.gunicorn
-    aiopyramid.scaffolds
     aiopyramid.websocket
+
+Module contents
+---------------
+
+.. automodule:: aiopyramid
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 Submodules
 ----------
@@ -51,10 +58,3 @@ aiopyramid.tweens module
     :show-inheritance:
 
 
-Module contents
----------------
-
-.. automodule:: aiopyramid
-    :members:
-    :undoc-members:
-    :show-inheritance:

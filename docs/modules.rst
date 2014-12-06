@@ -1,5 +1,5 @@
-aiopyramid
-==========
+API
+===
 
 .. toctree::
    :maxdepth: 4
