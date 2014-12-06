@@ -10,7 +10,7 @@ Bear in mind that you will need to use asynchronous libraries for io where appro
 
 This is not a fork of :ref:`Pyramid <pyramid:index>` and it does not rewrite
 any :ref:`Pyramid <pyramid:index>` code to run asynchronously!
-`:ref:`Pyramid <pyramid:index>` is just that flexible.
+:ref:`Pyramid <pyramid:index>` is just that flexible.
 
 Since this library is built on relatively new technology, it is not intended for production use.
 
