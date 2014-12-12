@@ -9,10 +9,6 @@ class HelloTestCase(unittest.TestCase):
     def test_demo_view(self):
         from .views import say_hello
 
-        @asyncio.coroutine
-        def _test_say_hello():
-            request = testing.DummyRequest()
-            view_callable = asyncio.coroutine(say_hello)
-            info = yield from view_callable(request)
-            self.assertEqual(info, 'Welcome to Pyramid with Asyncio.')
-        asyncio.get_event_loop().run_until_complete(_test_say_hello())
+        request = testing.DummyRequest()
+        info = asyncio.get_event_loop().run_until_complete(say_hello(request))
+        self.assertEqual(info, 'Welcome to Pyramid with Asyncio.')

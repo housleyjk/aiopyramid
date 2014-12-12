@@ -10,13 +10,9 @@ class HomeTestCase(unittest.TestCase):
     def test_home_view(self):
         from .views import home
 
-        @asyncio.coroutine
-        def _test_home():
-            request = testing.DummyRequest()
-            view_callable = asyncio.coroutine(home)
-            info = yield from view_callable(request)
-            self.assertEqual(info['title'], '{{project}} websocket test')
-        asyncio.get_event_loop().run_until_complete(_test_home())
+        request = testing.DummyRequest()
+        info = asyncio.get_event_loop().run_until_complete(home(request))
+        self.assertEqual(info['title'], 'aiotutorial websocket test')
 
 
 class WSTest(unittest.TestCase):
@@ -26,7 +22,6 @@ class WSTest(unittest.TestCase):
         self.loop = asyncio.get_event_loop()
 
     def test_echo_view(self):
-        """ Test default echo view. """
 
         @asyncio.coroutine
         def _websockets_compat_wrapper(ws, path):
@@ -42,5 +37,6 @@ class WSTest(unittest.TestCase):
             for x in range(20):
                 yield from ws.send(str(x))
                 y = yield from ws.recv()
-                assert int(y) == x
+                int(y) == x
+                self.assertEqual(int(y), x)
         self.loop.run_until_complete(_echo_view_client())
