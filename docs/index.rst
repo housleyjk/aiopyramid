@@ -34,6 +34,8 @@ For example:
 There is also a :term:`websocket` scaffold `aio_websocket` with basic tools for setting up
 a :term:`websocket` server.
 
+For a more detailed walkthrough of how to setup ``Aiopyramid`` see the :doc:`tutorial/index`.
+
 
 Contents
 --------

@@ -80,7 +80,7 @@ perform other configuration tasks.
 Tests
 .....
 
-The ``aiotutorial/tests.py`` file is a Python module with unittests for each of our views. 
+The ``aiotutorial/tests.py`` file is a Python module with unittests for each of our views.
 Let's look at the test case for the home page:
 
 .. code-block:: python
@@ -106,8 +106,8 @@ Views
 .....
 
 This is the brains of our application, the place where decisions about how to respond to a particular
-:term:`request` are made, and as such this is the place where you will most often start `chaining together 
-coroutines <chain coroutines>`_ to perform asynchronous tasks. Let's look at each of the example
+:term:`request` are made, and as such this is the place where you will most often start `chaining together
+coroutines`_ to perform asynchronous tasks. Let's look at each of the example
 views in turn:
 
 .. code-block:: python
@@ -121,25 +121,25 @@ views in turn:
         yield from asyncio.sleep(wait_time)
         return {'title': 'aiotutorial websocket test', 'wait_time': wait_time}
 
+For those already familiar with :ref:`Pyramid <pyramid:index>` most of this view should require
+no explanation. The important parts for running asynchronously are lines 2 and 5.
+
 The :func:`~pyramid.view.view_config` decorator on line 1 ties this view to the 'home'
 route declared in the app constructor. It also assigns a :term:`renderer` to the view that will
 render the data returned into the ``template/home.jinja`` template and return a response
 to the user. Line 2 wraps the view in a coroutine which differentiates it from a generator
 or native coroutine. Line 3 is the signature for the coroutine. ``Aiopyramid`` view mappers
-do not change the two default signarures for views, that is views that accept a request
+do not change the two default signarures for views, i.e. views that accept a request
 and views that accept a context and a request. On line 4, we retrieve a sleep parameter,
 from the request (the parameter can be either part of the querystring or the body). If
 the request doesn't include a sleep parameter, the view defaults to 0.1. We don't need to
 use ``yield from`` because ``request.params.get`` doesn't return a :term:`coroutine` or future.
 The data for the request exists in memory so retrieving the parameter should be very fast.
 Line 5 simulates performing some asynchronous task by suspending the coroutine and delegating to
-another coroutine, :func:`asyncio.sleep` which uses events to wait for ``wait_time``.
-Using ``yield from`` is very important, without it the coroutine would 
+another coroutine, :func:`asyncio.sleep`, which uses events to wait for ``wait_time`` seconds.
+Using ``yield from`` is very important, without it the coroutine would
 continue without sleeping as we want it to. Line 6 returns a Python dictionary that will be passed to the
 jinja2 renderer.
-
-For those already familiar with :ref:`Pyramid <pyramid:index>` most of this view should require
-no explanation. The important parts for running asynchronously are lines 2 and 5. 
 
 The second view accepts a websocket connection:
 
@@ -155,20 +155,20 @@ The second view accepts a websocket connection:
                 break
             yield from ws.send(message)
 
-This view is tied to the 'echo' route from the app constructor. Note that we use a special view mapper 
+This view is tied to the 'echo' route from the app constructor. Note that we use a special view mapper
 for websocket connections. The :class:`aiopyramid.websocket.config.WebsocketMapper` changes the signature
 of the view to accept a single websocket connection instead of a request. The connection object has three methods
-for communicating with the :term:`websocket` :meth:`recv`, :meth:`send`, and :meth:`close` methods,
-which correspond to similar methods in the `websockets`_ library.
+for communicating with the :term:`websocket` :meth:`recv`, :meth:`send`, and :meth:`close` that
+correspond to similar methods in the `websockets`_ library.
 
 This websocket view will run echoing the data it recieves until the connection is closed. On line 5 we use
 ``yield from`` to wait until a message is received. If the message is None, then we know that the websocket
 has closed and we break the loop to complete the echo coroutine. Otherwise, line 7 simply returns the same
 message back to the websocket. Very simple. In both cases when we need to perform some io we use ``yield from``
-to suspend our coroutine and delegate to another. 
+to suspend our coroutine and delegate to another.
 
 This kind of explicit yielding is a nice advantage for readability in Python code. It shows us exactly where
-asynchronous is being called. 
+asynchronous is being called.
 
 Development.ini
 ...............
@@ -187,9 +187,9 @@ of the two most important sections::
     # for py3
     logging.config = %(here)s/development.ini
 
-The ``[app:main]`` section contains the settings that will be passed to the app constructor as ``settings``. 
+The ``[app:main]`` section contains the settings that will be passed to the app constructor as ``settings``.
 This is where we include extensions for :ref:`Pyramid <pyramid:index>` such as ``Aiopyramid`` and the ``jinja``
-templating library. 
+templating library.
 
 The ``[server:main]`` configures the default server for the project, which in this case is :mod:`gunicorn`::
 
@@ -201,7 +201,7 @@ The ``[server:main]`` configures the default server for the project, which in th
 
 The ``port`` setting here is the port that we will use to access the application, such as in a browser. The
 ``worker_class`` is set to the :class:`aiopyramid.gunicorn.worker.AsyncGunicornWorker` because we need to have
-:mod:`gunicorn` setup the :doc:`Aiopyramid Architecture <approach>` for us. 
+:mod:`gunicorn` setup the :doc:`Aiopyramid Architecture <approach>` for us.
 
 Setup
 .....
@@ -221,7 +221,7 @@ Tweaking the defaults
 The default view mapper that ``Aiopyramid`` sets up when it is included by the application tries to be as
 robust as possible. It will inspect all of the views that we configure and try to guess whether or not
 they are :term:`coroutines <coroutine>`. If the view looks like a :term:`coroutine`, in other words if it has
-a ``yield from`` in it, the framework will treat it as a :term:`coroutine` otherwise it will assume it is
+a ``yield from`` in it, the framework will treat it as a :term:`coroutine`, otherwise it will assume it is
 legacy code and will run it in a separate thread to avoid blocking the event loop. This is very important
 in principle, but since we know that we have no legacy views in this project, it makes sense to replace
 the default mapper with one that expects views to be :term:`coroutines <coroutine>` always.
@@ -237,14 +237,11 @@ Adding the following line to the app constructor will do the trick:
 
 .. note::
 
-    When using ``Aiopyramid`` view mappers, it is actually not necessary to explicitly decorate :term:`view callables <view callabe>`
+    When using ``Aiopyramid`` view mappers, it is actually not necessary to explicitly decorate :term:`view callables <view callable>`
     with :func:`asyncio.coroutine` as in the examples because the mapper will wrap views that appear to be :term:`coroutines <coroutine>`
     for you. It is still good practice to explicitly wrap your views because it facilitates using them in places where a
-    view mapper may not be active, but if you are annoyed by the repetition, then you can skip writing
-
-    @asyncio.coroutine
-
-    before every view as long as you remember what is a :term:`coroutine`.
+    view mapper may not be active, but if you are annoyed by the repetition, then you can skip writing ``@asyncio.coroutine`` before
+    every view as long as you remember what is a :term:`coroutine`.
 
 Making Sure it Works
 ....................
@@ -254,7 +251,7 @@ The last step in initializing the project is to install out dependencies and tes
     python setup.py develop
 
 You can also use ``setup.py`` to run unittests::
-    
+
     python setup.py test
 
 You should see the following at the end of the output::
@@ -271,9 +268,9 @@ You should see the following at the end of the output::
 If you don't like the test output from ``setup.py``, consider using a test runner like `pytest`_.
 
 Now try running the server and visiting the homepage::
-    
+
     gunicorn --paste development.ini
-    
+
 Open your browser to http://127.0.0.1:6543 to see the JavaScript test of the our echo websocket.
 You should see the following output::
 
@@ -291,7 +288,7 @@ This shows that the websocket is working. If you want to verify that the server 
 multiple requests on a single thread, simply open a different browser (to avoid browser connection
 limitations) and go to http://127.0.0.1:6543?sleep=10. The new browser should take roughly ten seconds
 to load the page because our view is waiting for the value of ``sleep``. However, while that request is
-ongoing, you can refresh your first browser and see that the server is still able to fulfill requests. 
+ongoing, you can refresh your first browser and see that the server is still able to fulfill requests.
 
 Congratulations! You have successfuly setup a highly configurable asynchronous server using ``Aiopyramid``!
 
@@ -305,6 +302,6 @@ Congratulations! You have successfuly setup a highly configurable asynchronous s
 
 .. _pytest: http://pytest.org
 .. _virtualenvwrapper: https://virtualenvwrapper.readthedocs.org/en/latest/
-.. _chain coroutines: https://docs.python.org/3/library/asyncio-task.html#example-chain-coroutines
+.. _chaining together coroutines: https://docs.python.org/3/library/asyncio-task.html#example-chain-coroutines
 .. _websockets: http://aaugustin.github.io/websockets/
 .. _slowloris: http://ha.ckers.org/slowloris/

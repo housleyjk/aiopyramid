@@ -16,13 +16,28 @@ class AsyncioMapperBase(DefaultViewMapper):
 
     def run_in_coroutine_view(self, view):
 
-        return synchronize(view)
+        view = synchronize(view)
+
+        def coroutine_view(context, request):
+
+            if 'aiohttp' in request.environ.get('SERVER_SOFTWARE', ''):
+                # force aiohttp to load request parameters now
+                request.params.__getitem__ = request.params.__getitem__
+
+            return view(context, request)
+
+        return coroutine_view
 
     def run_in_executor_view(self, view):
 
         synchronizer = synchronize(strict=False)
 
         def executor_view(context, request):
+
+            if 'aiohttp' in request.environ.get('SERVER_SOFTWARE', ''):
+                # force aiohttp to load request parameters now
+                request.params.__getitem__ = request.params.__getitem__
+
             try:
                 # since we are running in a new thread,
                 # remove the old wsgi.file_wrapper for uwsgi
