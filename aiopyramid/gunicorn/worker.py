@@ -5,7 +5,11 @@ import io
 from gunicorn.workers.gaiohttp import AiohttpWorker
 from aiohttp.wsgi import WSGIServerHttpProtocol
 
-from aiopyramid.helpers import spawn_greenlet
+from aiopyramid.helpers import (
+    spawn_greenlet,
+    spawn_greenlet_on_scope_error,
+    synchronize,
+)
 
 
 class AiopyramidHttpServerProtocol(WSGIServerHttpProtocol):
@@ -20,6 +24,10 @@ class AiopyramidHttpServerProtocol(WSGIServerHttpProtocol):
             wsgiinput.write((yield from payload.read()))
             wsgiinput.seek(0)
             payload = wsgiinput
+        else:
+            # allow read to be called from a synchronous context
+            payload.read = synchronize(payload.read)
+            payload.read = spawn_greenlet_on_scope_error(payload.read)
 
         environ = self.create_wsgi_environ(message, payload)
         # add a reference to this for switching protocols

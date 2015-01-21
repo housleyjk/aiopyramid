@@ -16,13 +16,28 @@ class AsyncioMapperBase(DefaultViewMapper):
 
     def run_in_coroutine_view(self, view):
 
-        return synchronize(view)
+        view = synchronize(view)
+
+        def coroutine_view(context, request):
+
+            # Trigger loading of post data to avoide synchronization problems
+            # This must be done in a non-async context
+            request.params.__getitem__ = request.params.__getitem__
+
+            return view(context, request)
+
+        return coroutine_view
 
     def run_in_executor_view(self, view):
 
         synchronizer = synchronize(strict=False)
 
         def executor_view(context, request):
+
+            # Trigger loading of post data to avoide synchronization problems
+            # This must be done in a non-async context
+            request.params.__getitem__ = request.params.__getitem__
+
             try:
                 # since we are running in a new thread,
                 # remove the old wsgi.file_wrapper for uwsgi
@@ -69,6 +84,12 @@ class CoroutineOrExecutorMapper(AsyncioMapperBase):
 
     def __call__(self, view):
         original = view
+        while asyncio.iscoroutinefunction(view):
+            try:
+                view = view.__wrapped__  # unwrap coroutine
+            except AttributeError:
+                break
+
         view = super().__call__(view)
 
         if (
@@ -82,4 +103,3 @@ class CoroutineOrExecutorMapper(AsyncioMapperBase):
             return self.run_in_coroutine_view(view)
         else:
             return self.run_in_executor_view(view)
-
