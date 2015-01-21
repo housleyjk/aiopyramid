@@ -20,7 +20,7 @@ class AsyncioMapperBase(DefaultViewMapper):
 
         def coroutine_view(context, request):
 
-            # Trigger loading of post data to avoide synchronization problems
+            # Trigger loading of post data to avoid synchronization problems
             # This must be done in a non-async context
             request.params.__getitem__ = request.params.__getitem__
 
@@ -34,7 +34,7 @@ class AsyncioMapperBase(DefaultViewMapper):
 
         def executor_view(context, request):
 
-            # Trigger loading of post data to avoide synchronization problems
+            # Trigger loading of post data to avoid synchronization problems
             # This must be done in a non-async context
             request.params.__getitem__ = request.params.__getitem__
 
