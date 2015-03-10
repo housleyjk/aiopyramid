@@ -29,7 +29,7 @@ For example:
     pcreate -s aio_starter <project>
     cd <project>
     python setup.py develop
-    pserve development.ini
+    gunicorn --paste development.ini
 
 There is also a :term:`websocket` scaffold `aio_websocket` with basic tools for setting up
 a :term:`websocket` server.

@@ -3,6 +3,12 @@ Changes
 
 .. :changelog:
 
+0.3.1 (201-01-31)
+------------------
+    - Fix issues related to POST requests
+    - Fix issues related to coroutine mappers
+    - Sync with Gunicorn settings a la issue #917
+
 0.3.0 (2014-12-06)
 ------------------
     - Add sphinx

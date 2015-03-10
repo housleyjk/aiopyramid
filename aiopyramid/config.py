@@ -20,9 +20,9 @@ class AsyncioMapperBase(DefaultViewMapper):
 
         def coroutine_view(context, request):
 
-            if 'aiohttp' in request.environ.get('SERVER_SOFTWARE', ''):
-                # force aiohttp to load request parameters now
-                request.params.__getitem__ = request.params.__getitem__
+            # Trigger loading of post data to avoid synchronization problems
+            # This must be done in a non-async context
+            request.params.__getitem__ = request.params.__getitem__
 
             return view(context, request)
 
@@ -34,9 +34,9 @@ class AsyncioMapperBase(DefaultViewMapper):
 
         def executor_view(context, request):
 
-            if 'aiohttp' in request.environ.get('SERVER_SOFTWARE', ''):
-                # force aiohttp to load request parameters now
-                request.params.__getitem__ = request.params.__getitem__
+            # Trigger loading of post data to avoid synchronization problems
+            # This must be done in a non-async context
+            request.params.__getitem__ = request.params.__getitem__
 
             try:
                 # since we are running in a new thread,
@@ -84,6 +84,12 @@ class CoroutineOrExecutorMapper(AsyncioMapperBase):
 
     def __call__(self, view):
         original = view
+        while asyncio.iscoroutinefunction(view):
+            try:
+                view = view.__wrapped__  # unwrap coroutine
+            except AttributeError:
+                break
+
         view = super().__call__(view)
 
         if (

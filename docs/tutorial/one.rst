@@ -215,33 +215,20 @@ for this project. We will be visiting the ``setup.py`` file in later chapters as
         'pyramid_jinja2',
     ]
 
-Tweaking the defaults
-.....................
+Note about View Mappers
+.......................
 
 The default view mapper that ``Aiopyramid`` sets up when it is included by the application tries to be as
 robust as possible. It will inspect all of the views that we configure and try to guess whether or not
 they are :term:`coroutines <coroutine>`. If the view looks like a :term:`coroutine`, in other words if it has
 a ``yield from`` in it, the framework will treat it as a :term:`coroutine`, otherwise it will assume it is
-legacy code and will run it in a separate thread to avoid blocking the event loop. This is very important
-in principle, but since we know that we have no legacy views in this project, it makes sense to replace
-the default mapper with one that expects views to be :term:`coroutines <coroutine>` always.
+legacy code and will run it in a separate thread to avoid blocking the event loop. This is very important.
 
-Adding the following line to the app constructor will do the trick:
-
-.. code-block:: python
-    :emphasize-lines: 2
-
-    config = Configurator(settings=settings)
-    config.set_view_mapper('aiopyramid.config.CoroutineMapper')
-    config.add_route('home', '/')
-
-.. note::
-
-    When using ``Aiopyramid`` view mappers, it is actually not necessary to explicitly decorate :term:`view callables <view callable>`
-    with :func:`asyncio.coroutine` as in the examples because the mapper will wrap views that appear to be :term:`coroutines <coroutine>`
-    for you. It is still good practice to explicitly wrap your views because it facilitates using them in places where a
-    view mapper may not be active, but if you are annoyed by the repetition, then you can skip writing ``@asyncio.coroutine`` before
-    every view as long as you remember what is a :term:`coroutine`.
+When using ``Aiopyramid`` view mappers, it is actually not necessary to explicitly decorate :term:`view callables <view callable>`
+with :func:`asyncio.coroutine` as in the examples because the mapper will wrap views that appear to be :term:`coroutines <coroutine>`
+for you. It is still good practice to explicitly wrap your views because it facilitates using them in places where a
+view mapper may not be active, but if you are annoyed by the repetition, then you can skip writing ``@asyncio.coroutine`` before
+every view as long as you remember what is a :term:`coroutine`.
 
 Making Sure it Works
 ....................
