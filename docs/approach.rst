@@ -105,7 +105,7 @@ For example, include the following in your application's constructor:
 
 .. code-block:: python
 
-    import
+    import asyncio
     from concurrent.futures import ThreadPoolExecutor
     ...
     asyncio.get_event_loop().set_default_executor(ThreadPoolExecutor(max_workers=150))

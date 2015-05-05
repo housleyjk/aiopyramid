@@ -12,8 +12,7 @@ Once you have your tutorial environment active, install ``Aiopyramid``::
     pip install aiopyramid
 
 This will also install the :ref:`Pyramid <pyramid:index>` framework. Now create
-a new project using the ``aio_websocket`` scaffold since we intend to use Websockets
-as part of this project.
+a new project using the ``aio_websocket`` scaffold.
 
     pcreate -s aio_websocket aiotutorial
 
@@ -40,7 +39,7 @@ App Constructor
 The ``aiotutorial/__init__.py`` file contains the constructor for our app. It loads the logging
 config from the ``development.ini`` config file and sets up Python logging. This is necessary
 because the logging configuration won't be automatically detected when using Python3. Then, it
-sets up two routes ``home`` and ``echo`` that we can tie views into with our views. Finally,
+sets up two routes ``home`` and ``echo`` that we can tie into with our views. Finally,
 the constructor scans the project for configuration decorators and builds the wsgi callable.
 
 The app constructor is the place where we will connect Python libraries to our application and
@@ -138,7 +137,7 @@ The data for the request exists in memory so retrieving the parameter should be 
 Line 5 simulates performing some asynchronous task by suspending the coroutine and delegating to
 another coroutine, :func:`asyncio.sleep`, which uses events to wait for ``wait_time`` seconds.
 Using ``yield from`` is very important, without it the coroutine would
-continue without sleeping as we want it to. Line 6 returns a Python dictionary that will be passed to the
+continue without sleeping. Line 6 returns a Python dictionary that will be passed to the
 jinja2 renderer.
 
 The second view accepts a websocket connection:
@@ -168,7 +167,7 @@ message back to the websocket. Very simple. In both cases when we need to perfor
 to suspend our coroutine and delegate to another.
 
 This kind of explicit yielding is a nice advantage for readability in Python code. It shows us exactly where
-asynchronous is being called.
+we are calling asynchronous code.
 
 Development.ini
 ...............
@@ -208,7 +207,7 @@ Setup
 
 The ``setup.py`` file makes the ``aiotutorial`` package easy to distirbute, and it is also a good way, although
 not the only good way, to manage dependencies for our project. Lines 18-21 list the Python packages that we need
-for this project. We will be visiting the ``setup.py`` file in later chapters as we add more libraries::
+for this project::
 
     requires = [
         'aiopyramid[gunicorn]',
@@ -286,6 +285,8 @@ Congratulations! You have successfuly setup a highly configurable asynchronous s
     you could run a simple ``Django`` application with gunicorn. You should see that the ``Aiopyramid`` server
     is still able to respond to requests whereas the ``Django`` server is bogged down. You could also use a simple
     PHP application using Apache to see this difference.
+
+    Also, checkout ref:`Aiopyramid Benchmarks <Benchmarks>`.
 
 .. _pytest: http://pytest.org
 .. _virtualenvwrapper: https://virtualenvwrapper.readthedocs.org/en/latest/
