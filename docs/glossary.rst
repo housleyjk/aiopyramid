@@ -13,7 +13,7 @@ Glossary
 
    synchronized coroutine
     A coroutine that has been wrapped or decorated by :func:`~aiopyramid.helpers.synchronize` so that
-    it can be executed without using ``yield from`` in a child greenlet. Synchronized coroutines are
+    it can be executed without using ``yield from`` in a child :term:`greenlet`. Synchronized coroutines are
     used to bridge the gap between framework code which expects normal Python functions and application
     code that uses coroutines.
 

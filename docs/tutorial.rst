@@ -1,5 +1,10 @@
-1. Install Aiopyramid and Initialize Project
-============================================
+Tutorial
+========
+
+This is a basic tutorial for setting up a new project with `Aiopyramid`.
+
+Install Aiopyramid and Initialize Project
+.........................................
 
 It is highly recommended that you use a virtual environment for your project. The
 tutorial will assume that you are using `virtualenvwrapper`_ with a virtualenv
@@ -207,7 +212,9 @@ Setup
 
 The ``setup.py`` file makes the ``aiotutorial`` package easy to distirbute, and it is also a good way, although
 not the only good way, to manage dependencies for our project. Lines 18-21 list the Python packages that we need
-for this project::
+for this project.
+
+.. code-block:: python
 
     requires = [
         'aiopyramid[gunicorn]',
@@ -286,7 +293,7 @@ Congratulations! You have successfuly setup a highly configurable asynchronous s
     is still able to respond to requests whereas the ``Django`` server is bogged down. You could also use a simple
     PHP application using Apache to see this difference.
 
-    Also, checkout ref:`Aiopyramid Benchmarks <Benchmarks>`.
+    Also, checkout :doc:`Benchmarks for the Curious <benchmarks>`.
 
 .. _pytest: http://pytest.org
 .. _virtualenvwrapper: https://virtualenvwrapper.readthedocs.org/en/latest/

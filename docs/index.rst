@@ -1,18 +1,15 @@
-Welcome to aiopyramid's documentation!
-======================================
+Aiopyramid
+==========
 
 A library for leveraging pyramid infrastructure asynchronously using the new :mod:`asyncio`.
 
 ``Aiopyramid`` provides tools for making web applications with :ref:`Pyramid <pyramid:index>` and :mod:`asyncio`.
 It will not necessarily make your application run faster. Instead, it gives you some tools
-and patterns to build an application on asynchronous servers.
-Bear in mind that you will need to use asynchronous libraries for io where appropriate.
+and patterns to build an application on asynchronous servers that handle many active connections.
 
 This is not a fork of :ref:`Pyramid <pyramid:index>` and it does not rewrite
 any :ref:`Pyramid <pyramid:index>` code to run asynchronously!
 :ref:`Pyramid <pyramid:index>` is just that flexible.
-
-Since this library is built on relatively new technology, it is not intended for production use.
 
 Getting Started
 ---------------
@@ -34,7 +31,7 @@ For example:
 There is also a :term:`websocket` scaffold `aio_websocket` with basic tools for setting up
 a :term:`websocket` server.
 
-For a more detailed walkthrough of how to setup ``Aiopyramid`` see the :doc:`tutorial/index`.
+For a more detailed walkthrough of how to setup ``Aiopyramid`` see the :doc:`tutorial`.
 
 
 Contents
@@ -43,12 +40,12 @@ Contents
 .. toctree::
     :maxdepth: 3
 
-    tutorial/index
     features
-    websockets
-    servers
-    tests
+    tutorial
+    Benchmarks <benchmarks>
     approach
+    tests
+    Index <tables>
 
 
 Contributors
@@ -59,7 +56,7 @@ Contributors
 - Tiago Requeijo
 - Ander Ustarroz
 
-Indices and tables
+Indices and Tables
 ==================
 
 * :ref:`genindex`
