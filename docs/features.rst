@@ -45,7 +45,8 @@ For example:
 
     class MyResource:
         """
-        This resource uses a callable for it's __acl__ that accesses the db.
+        This resource uses a callable for it's 
+        __acl__ that accesses the db.
         """
 
         # this
@@ -85,7 +86,7 @@ a callback.
 
 .. code-block:: python
 
-    from pyramid.authentication import AuthTktAuthenticationPolicy  # for example
+    from pyramid.authentication import AuthTktAuthenticationPolicy
     from aiopyramid.auth import authn_policy_factory
 
     from .myauth import get_principals
@@ -144,8 +145,9 @@ without other :term:`tweens <tween>` needing to explicitly ``yield from`` it. Fo
 
     def coroutine_logger_tween_factory(handler, registry):
         """
-        Example of an asynchronous tween that delegates a synchronous function to
-        a child thread. This tween asynchronously logs all requests and responses.
+        Example of an asynchronous tween that delegates
+        a synchronous function to a child thread.
+        This tween asynchronously logs all requests and responses.
         """
 
         # We use the synchronize decorator because we will call this
@@ -164,10 +166,11 @@ without other :term:`tweens <tween>` needing to explicitly ``yield from`` it. Fo
             )
 
         def coroutine_logger_tween(request):
-            # The following calls are guaranteed to happen in order but they do not
-            # block the event loop
+            # The following calls are guaranteed to happen in order
+            # but they do not block the event loop
 
-            # print the request on the aio event loop without needing to say yield
+            # print the request on the aio event loop
+            # without needing to say yield
             # at this point, other coroutines and requests can be handled
             _async_print(request)
 
