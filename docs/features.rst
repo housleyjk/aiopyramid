@@ -45,7 +45,7 @@ For example:
 
     class MyResource:
         """
-        This resource uses a callable for it's 
+        This resource uses a callable for it's
         __acl__ that accesses the db.
         """
 
@@ -171,7 +171,8 @@ without other :term:`tweens <tween>` needing to explicitly ``yield from`` it. Fo
 
             # print the request on the aio event loop
             # without needing to say yield
-            # at this point, other coroutines and requests can be handled
+            # at this point,
+            # other coroutines and requests can be handled
             _async_print(request)
 
             # get response, this should be done in this greenlet
