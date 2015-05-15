@@ -55,6 +55,7 @@ Contributors
 - Guillaume Gauvrit
 - Tiago Requeijo
 - Ander Ustarroz
+- Ramon Navarro Bosch
 
 Indices and Tables
 ==================
