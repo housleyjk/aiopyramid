@@ -65,6 +65,7 @@ class AsyncGunicornWorker(AiohttpWorker):
     def factory(self, wsgi, *args):
         proto = AiopyramidHttpServerProtocol(
             wsgi, loop=self.loop,
+            readpayload=True,
             log=self.log,
             keep_alive=self.cfg.keepalive,
             access_log=self.log.access_log,
