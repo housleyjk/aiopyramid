@@ -26,6 +26,24 @@ it is possible to restore the default view mapper, but note that this will mean 
 coroutine views that do not specify :class:`~aiopyramid.config.CoroutineMapper` as their
 view mapper will fail.
 
+If most of your view needs to be a :term:`coroutine` but you want to call out to code that blocks, you can
+always use `run_in_executor`_. `Aiopyramid` also provides a decorator, `~aiopyramid.helpers.use_executor`,
+for specifying declaratively that a particular routine should run in a separate thread.
+
+For example:
+
+.. code-block:: python
+
+    import asyncio
+    from aiopyramid.helpers import use_executor
+
+    class DatabaseUtilies:
+
+        @use_executor  # query_it is now a coroutine
+        def query_it():
+            # some code that blocks
+
+
 Authorization
 -------------
 
@@ -334,3 +352,4 @@ in your application's constructor like so:
 .. _uWSGI asyncio plugin: http://uwsgi-docs.readthedocs.org/en/latest/asyncio.html
 .. _websockets: http://aaugustin.github.io/websockets/
 .. _tutorial: http://www.developerfiles.com/installing-uwsgi-with-asyncio-on-mac-os-x-10-10-yosemite/
+.. _run_in_executor: https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.BaseEventLoop.run_in_executor

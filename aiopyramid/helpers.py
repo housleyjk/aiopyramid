@@ -156,3 +156,35 @@ def spawn_greenlet_on_scope_error(func):
                 return spawn_greenlet(func, *args, **kwargs)
 
     return _run_or_return_future
+
+
+def use_executor(*args, executor=None):
+    """
+    A decorator for running a callback in the executor.
+
+    This is useful to provide a declarative style for converting some
+    thread-based code to a :term:`coroutine`. It creates a :term:`coroutine`
+    by running the wrapped code in a separate thread.
+
+    """
+    def _wrapper(callback):
+        @functools.wraps(callback)
+        @asyncio.coroutine
+        def _wrapped_function(*args, **kwargs):
+            loop = asyncio.get_event_loop()
+            r = yield from loop.run_in_executor(
+                executor,
+                functools.partial(
+                    callback,
+                    *args,
+                    **kwargs
+                )
+            )
+            return r
+        return _wrapped_function
+
+    try:
+        func = args[0]
+        return _wrapper(func)
+    except IndexError:
+        return _wrapper
