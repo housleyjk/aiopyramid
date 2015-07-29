@@ -27,7 +27,7 @@ coroutine views that do not specify :class:`~aiopyramid.config.CoroutineMapper` 
 view mapper will fail.
 
 If most of your view needs to be a :term:`coroutine` but you want to call out to code that blocks, you can
-always use `run_in_executor`_. `Aiopyramid` also provides a decorator, `~aiopyramid.helpers.use_executor`,
+always use `run_in_executor`_. `Aiopyramid` also provides a decorator, :func:`~aiopyramid.helpers.use_executor`,
 for specifying declaratively that a particular routine should run in a separate thread.
 
 For example:
