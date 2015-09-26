@@ -35,7 +35,10 @@ class SwitchProtocolsResponse(Response):
         self.status_int = 101
 
         http_1_1 = environ['SERVER_PROTOCOL'] == 'HTTP/1.1'
-        get_header = lambda k: environ['HTTP_' + k.upper().replace('-', '_')]
+
+        def get_header(k):
+            return environ['HTTP_' + k.upper().replace('-', '_')]
+
         key = websockets.handshake.check_request(get_header)
 
         if not http_1_1 or key is None:

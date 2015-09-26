@@ -1,13 +1,10 @@
 """
 The aiopyramid.traversal module is deprecated, use aiopyramid.helpers.synchronize instead.
 See http://aiopyramid.readthedocs.org/en/latest/features.html#traversal.
-"""  # noqa
-
-import warnings
-warnings.warn(__doc__, DeprecationWarning)
-
+"""  # NOQA
 
 import asyncio
+import warnings
 
 from pyramid.traversal import (
     ResourceTreeTraverser as TraverserBase,
@@ -21,6 +18,8 @@ from pyramid.compat import decode_path_info
 from .helpers import synchronize
 
 SLASH = "/"
+
+warnings.warn(__doc__, DeprecationWarning)
 
 
 @synchronize

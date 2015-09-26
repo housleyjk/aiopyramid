@@ -3,8 +3,12 @@ Changes
 
 .. :changelog:
 
-0.3.1 (201-01-31)
+0.3.2 (2015-09-24)
 ------------------
+    - Support Python3.5
+
+0.3.1 (2015-01-31)
+-------------------
     - Fix issues related to POST requests
     - Fix issues related to coroutine mappers
     - Sync with Gunicorn settings a la issue #917

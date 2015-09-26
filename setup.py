@@ -24,13 +24,14 @@ if py_version < (3, 4):
 
 setup(
     name='aiopyramid',
-    version='0.3.1',
+    version='0.3.2',
     description='Tools for running pyramid using asyncio.',
     long_description=README + '\n\n\n\n' + CHANGES,
     classifiers=[
         "Programming Language :: Python",
         "Programming Language :: Python :: 3.3",
         "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
         "Framework :: Pyramid",
         "Topic :: Internet :: WWW/HTTP",
         "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",

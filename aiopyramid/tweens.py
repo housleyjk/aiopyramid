@@ -3,12 +3,12 @@ The aiopyramid.tweens module is deprecated. See example in the docs:
 http://aiopyramid.readthedocs.org/en/latest/features.html#tweens.
 """
 
-import warnings
-warnings.warn(__doc__, DeprecationWarning)
-
 import asyncio
+import warnings
 
 from .helpers import synchronize
+
+warnings.warn(__doc__, DeprecationWarning)
 
 
 def coroutine_logger_tween_factory(handler, registry):
