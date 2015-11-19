@@ -80,6 +80,8 @@ class UWSGIWebsocketMapper(AsyncioMapperBase):
 
             while True:
                 if future.done():
+                    if future.exception() is not None:
+                        raise WebsocketClosed from future.exception()
                     raise WebsocketClosed
 
                 # message in
