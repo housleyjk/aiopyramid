@@ -9,7 +9,7 @@ def ignore_websocket_closed(app):
         try:
             return app(environ, start_response)
         except WebsocketClosed as e:
-            if e.cause:
+            if e.__cause__:
                 raise
             return ('')
     return _call_app_ignoring_ws_closed
