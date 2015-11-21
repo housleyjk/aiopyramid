@@ -1,5 +1,6 @@
 import inspect
 import asyncio
+from contextlib import suppress
 
 import greenlet
 
@@ -42,6 +43,8 @@ class UWSGIWebsocket:
 
 
 class UWSGIWebsocketMapper(AsyncioMapperBase):
+
+    use_str = True
 
     def launch_websocket_view(self, view):
 
@@ -92,6 +95,11 @@ class UWSGIWebsocketMapper(AsyncioMapperBase):
                     except OSError:
                         msg = None
 
+                    if UWSGIWebsocketMapper.use_str:
+                        with suppress(Exception):
+                            print('howdy')
+                            msg = bytes.decode(msg)
+
                     if msg or msg is None:
                         q_in.put_nowait(msg)
 
@@ -110,3 +118,5 @@ class UWSGIWebsocketMapper(AsyncioMapperBase):
     def __call__(self, view):
         """ Accepts a view_callable class. """
         return self.launch_websocket_view(view)
+
+UWSGIWebsocketMapper.use_str = False

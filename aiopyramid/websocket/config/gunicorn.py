@@ -1,5 +1,6 @@
 import asyncio
 import inspect
+import functools
 
 import websockets
 import gunicorn  # noqa
@@ -7,6 +8,25 @@ import gunicorn  # noqa
 from pyramid.response import Response
 
 from aiopyramid.config import AsyncioMapperBase
+
+
+def _use_bytes(func):
+    """
+    Encodes strings received from websockets to bytes to
+    provide consistency with uwsgi since we don't have access
+    to the raw WebsocketFrame.
+    """
+
+    @asyncio.coroutine
+    @functools.wraps(func)
+    def _use_bytes_inner(*args, **kwargs):
+        data = yield from func(*args, **kwargs)
+        if isinstance(data, str):
+            return str.encode(data)
+        else:
+            return data
+
+    return _use_bytes_inner
 
 
 class HandshakeInterator:
@@ -53,6 +73,8 @@ class SwitchProtocolsResponse(Response):
 
 class WebsocketMapper(AsyncioMapperBase):
 
+    use_bytes = False
+
     def launch_websocket_view(self, view):
 
         def websocket_view(context, request):
@@ -64,6 +86,9 @@ class WebsocketMapper(AsyncioMapperBase):
 
             @asyncio.coroutine
             def _ensure_ws_close(ws):
+                if WebsocketMapper.use_bytes:
+                    ws.recv = _use_bytes(ws.recv)
+
                 yield from view_callable(ws)
                 yield from ws.close()
 

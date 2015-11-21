@@ -3,6 +3,11 @@ Changes
 
 .. :changelog:
 
+0.3.3 (2015-11-21)
+------------------
+    - Merge fix for `ignore_websocket_closed` to allow chained exceptions
+    - Add option to coerce bytes to str for uwsgi websockets
+
 0.3.2 (2015-09-24)
 ------------------
     - Support Python3.5

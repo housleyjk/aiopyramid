@@ -42,7 +42,6 @@ Contents
 
     features
     tutorial
-    Benchmarks <benchmarks>
     approach
     tests
     Index <tables>
@@ -56,6 +55,7 @@ Contributors
 - Tiago Requeijo
 - Ander Ustarroz
 - Ramon Navarro Bosch
+- Rickert Mulder
 
 Indices and Tables
 ==================

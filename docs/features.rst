@@ -265,6 +265,8 @@ Example `uWSGI`_ config:
         greenlet
 
 For those setting up ``Aiopyramid`` on a Mac, Ander Ustarroz's `tutorial`_ may prove useful.
+Rickert Mulder has also provided a fork of `uWSGI`_ that allows for quick installation by running
+`pip install git+git://github.com/circlingthesun/uwsgi.git` in a virtualenv.
 
 Websockets
 ----------
@@ -327,6 +329,23 @@ as follows:
 
         def on_message(self, message):
             yield from self.send(message)
+
+
+The underyling websocket implementations of `uWSGI`_ and `websockets`_ differ in how they pass on
+the WebSocket message. `uWSGI`_ always sends `bytes` even when the WebSocket frame indicates that
+the message is text, whereas `websockets`_ decodes text messages to `str`.
+`Aiopyramid` attempts to match the behavior of `websockets`_ by default, which means
+that it coerces messages from `uWSGI`_ to `str` where possible. To adjust this behavior, you can set the
+:attr:`~aiopyramid.websocket.config.UWSGIWebsocketMapper.use_str` flag to `False`, or alternatively to coerce
+`websockets`_ messages back to bytes, set the :attr:`~aiopyramid.websocket.config.WebsocketMapper.use_bytes`
+flag to True:
+
+.. code-block:: python
+
+    # In your app constructor
+    from aiopyramid.websocket.config import WebsocketMapper
+
+    WebsocketMapper.use_bytes = True
 
 
 uWSGI Special Note

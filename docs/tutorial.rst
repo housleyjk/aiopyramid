@@ -293,8 +293,6 @@ Congratulations! You have successfuly setup a highly configurable asynchronous s
     is still able to respond to requests whereas the ``Django`` server is bogged down. You could also use a simple
     PHP application using Apache to see this difference.
 
-    Also, checkout :doc:`Benchmarks for the Curious <benchmarks>`.
-
 .. _pytest: http://pytest.org
 .. _virtualenvwrapper: https://virtualenvwrapper.readthedocs.org/en/latest/
 .. _chaining together coroutines: https://docs.python.org/3/library/asyncio-task.html#example-chain-coroutines
