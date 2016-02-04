@@ -3,6 +3,10 @@ Changes
 
 .. :changelog:
 
+0.3.4 (2016-02-03)
+------------------
+    - Fix compatiblity with websockets 3+
+
 0.3.3 (2015-11-21)
 ------------------
     - Merge fix for `ignore_websocket_closed` to allow chained exceptions

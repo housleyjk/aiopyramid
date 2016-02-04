@@ -10,6 +10,27 @@ from pyramid.response import Response
 from aiopyramid.config import AsyncioMapperBase
 
 
+def _connection_closed_to_none(func):
+    """
+    A backwards compatibility shim for websockets 3+. We need to
+    still return `None` rather than throwing an exception in order
+    to unite the interface with uWSGI even though the exception is
+    more Pythonic.
+    """
+
+    @asyncio.coroutine
+    @functools.wraps(func)
+    def _connection_closed_to_none_inner(*args, **kwargs):
+        try:
+            msg = yield from func(*args, **kwargs)
+        except websockets.exceptions.ConnectionClosed:
+            msg = None
+
+        return msg
+
+    return _connection_closed_to_none_inner
+
+
 def _use_bytes(func):
     """
     Encodes strings received from websockets to bytes to
@@ -88,6 +109,8 @@ class WebsocketMapper(AsyncioMapperBase):
             def _ensure_ws_close(ws):
                 if WebsocketMapper.use_bytes:
                     ws.recv = _use_bytes(ws.recv)
+
+                ws.recv = _connection_closed_to_none(ws.recv)
 
                 yield from view_callable(ws)
                 yield from ws.close()
