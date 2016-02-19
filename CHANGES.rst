@@ -3,6 +3,10 @@ Changes
 
 .. :changelog:
 
+0.3.5 (2016-02-18)
+------------------
+    - Fix Gunicorn logging support
+
 0.3.4 (2016-02-03)
 ------------------
     - Fix compatiblity with websockets 3+
