@@ -78,7 +78,8 @@ class SwitchProtocolsResponse(Response):
         http_1_1 = environ['SERVER_PROTOCOL'] == 'HTTP/1.1'
 
         def get_header(k):
-            return environ['HTTP_' + k.upper().replace('-', '_')]
+            key_map = {k.upper(): k for k in environ}
+            return environ[key_map['HTTP_' + k.upper().replace('-', '_')]]
 
         key = websockets.handshake.check_request(get_header)
 
