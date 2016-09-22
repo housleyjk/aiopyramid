@@ -1,6 +1,6 @@
 """
 The aiopyramid.tweens module is deprecated. See example in the docs:
-http://aiopyramid.readthedocs.org/en/latest/features.html#tweens.
+http://aiopyramid.readthedocs.io/features.html#tweens.
 """
 
 import asyncio

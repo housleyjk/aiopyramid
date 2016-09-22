@@ -38,4 +38,4 @@ Full documentation for ``Aiopyramid`` can be found `here`_.
 .. _gunicorn: http://gunicorn.org
 .. _uWSGI: https://github.com/unbit/uwsgi
 .. _uWSGI asyncio plugin: http://uwsgi-docs.readthedocs.org/en/latest/asyncio.html
-.. _here: http://aiopyramid.readthedocs.org/en/latest/
+.. _here: http://aiopyramid.readthedocs.io/

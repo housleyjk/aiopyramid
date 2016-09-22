@@ -1,6 +1,6 @@
 """
 The aiopyramid.traversal module is deprecated, use aiopyramid.helpers.synchronize instead.
-See http://aiopyramid.readthedocs.org/en/latest/features.html#traversal.
+See http://aiopyramid.readthedocs.io/features.html#traversal.
 """  # NOQA
 
 import asyncio
