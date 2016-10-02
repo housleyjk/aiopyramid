@@ -3,6 +3,10 @@ Changes
 
 .. :changelog:
 
+0.3.6 (2016-09-22)
+------------------
+    - Fix header normalization for Gunicorn
+
 0.3.5 (2016-02-18)
 ------------------
     - Fix Gunicorn logging support
