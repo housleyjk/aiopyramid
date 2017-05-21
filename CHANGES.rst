@@ -3,6 +3,10 @@ Changes
 
 .. :changelog:
 
+0.3.7 (2016-09-22)
+------------------
+    - Peg aiohttp dependency
+
 0.3.6 (2016-09-22)
 ------------------
     - Fix header normalization for Gunicorn
