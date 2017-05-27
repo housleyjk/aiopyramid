@@ -25,7 +25,7 @@ class TestTweens(unittest.TestCase):
         def async_tween(request):
             this = greenlet.getcurrent()
             future = asyncio.Future()
-            sub_task = asyncio.async(
+            sub_task = asyncio.ensure_future(
                 run_in_greenlet(this, future, _async_action),
             )
             self.assertIsInstance(sub_task, asyncio.Future)

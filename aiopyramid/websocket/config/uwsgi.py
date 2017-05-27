@@ -74,7 +74,7 @@ class UWSGIWebsocketMapper(AsyncioMapperBase):
             # to the child greenlet.
 
             future = asyncio.Future()
-            asyncio.async(
+            asyncio.ensure_future(
                 run_in_greenlet(this, future, view_callable, ws)
             )
 

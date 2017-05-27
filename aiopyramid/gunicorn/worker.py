@@ -1,130 +1,125 @@
 import asyncio
-import time
-import io
-import datetime
-import os
 
-from gunicorn.workers.gaiohttp import AiohttpWorker
-from aiohttp.wsgi import WSGIServerHttpProtocol
+from aiohttp_wsgi.wsgi import WSGIHandler, ReadBuffer
+from aiohttp.worker import GunicornWebWorker
+from aiohttp.web import Application, Response, HTTPRequestEntityTooLarge
 
 from aiopyramid.helpers import (
     spawn_greenlet,
-    spawn_greenlet_on_scope_error,
-    synchronize,
 )
 
 
-def atoms(resp, req, environ, request_time):
-    """ Gets atoms for log formating.
-    """
-    status = str(resp.status)
-    atoms = {
-        'h': environ.get('REMOTE_ADDR', '-'),
-        'l': '-',
-        'u': '-',
-        't': time.strftime('[%d/%b/%Y:%H:%M:%S %z]'),
-        'r': "%s %s %s" % (
-            environ['REQUEST_METHOD'],
-            environ['RAW_URI'],
-            environ["SERVER_PROTOCOL"]),
-        's': status,
-        'm': environ.get('REQUEST_METHOD'),
-        'U': environ.get('PATH_INFO'),
-        'q': environ.get('QUERY_STRING'),
-        'H': environ.get('SERVER_PROTOCOL'),
-        'b': '-',
-        'B': None,
-        'f': environ.get('HTTP_REFERER', '-'),
-        'a': environ.get('HTTP_USER_AGENT', '-'),
-        'T': request_time.seconds,
-        'D': (request_time.seconds * 1000000) + request_time.microseconds,
-        'L': "%d.%06d" % (request_time.seconds, request_time.microseconds),
-        'p': "<%s>" % os.getpid()
-    }
-
-    # add request headers
-    if hasattr(req, 'headers'):
-        req_headers = req.headers
-    else:
-        req_headers = req
-
-    atoms.update(
-        dict([("{%s}i" % k.lower(), v) for k, v in req_headers.items()]))
-
-    # add response headers
-    atoms.update(dict(
-        [("{%s}o" % k.lower(), v) for k, v in resp.headers.items()]))
-
-    return atoms
+def _run_application(application, environ):
+    # Simple start_response callable.
+    def start_response(status, headers, exc_info=None):
+        nonlocal response_status, response_reason
+        nonlocal response_headers, response_body
+        status_code, reason = status.split(None, 1)
+        status_code = int(status_code)
+        # Start the response.
+        response_status = status_code
+        response_reason = reason
+        response_headers = headers
+        del response_body[:]
+        return response_body.append
+    # Response data.
+    response_status = None
+    response_reason = None
+    response_headers = None
+    response_body = []
+    # Run the application.
+    body_iterable = application(environ, start_response)
+    try:
+        response_body.extend(body_iterable)
+        assert response_status is not None, "application did not call start_response()"  # noqa
+        return (
+            response_status,
+            response_reason,
+            response_headers,
+            b"".join(response_body),
+        )
+    finally:
+        # Close the body.
+        if hasattr(body_iterable, "close"):
+            body_iterable.close()
 
 
-class AiopyramidHttpServerProtocol(WSGIServerHttpProtocol):
+class AiopyramidWSGIHandler(WSGIHandler):
+
+    def _get_environ(self, request, body, content_length):
+        environ = super(AiopyramidWSGIHandler, self)._get_environ(
+            request,
+            body,
+            content_length)
+        # restore hop headers for websockets
+        for header_name in request.headers:
+            header_name = header_name.upper()
+            if header_name not in ("CONTENT-LENGTH", "CONTENT-TYPE"):
+                header_value = ",".join(request.headers.getall(header_name))
+                environ["HTTP_" + header_name.replace("-", "_")] = header_value
+        return environ
 
     @asyncio.coroutine
-    def handle_request(self, message, payload):
-        """ Patched from aiohttp. """
-        now = time.time()
+    def handle_request(self, request):
+        # Check for body size overflow.
+        if (
+                request.content_length is not None and
+                request.content_length > self._max_request_body_size):
+            raise HTTPRequestEntityTooLarge()
+        # Buffer the body.
+        body_buffer = ReadBuffer(
+            self._inbuf_overflow,
+            self._max_request_body_size,
+            self._loop,
+            self._executor)
 
-        if self.readpayload:
-            wsgiinput = io.BytesIO()
-            wsgiinput.write((yield from payload.read()))
-            wsgiinput.seek(0)
-            payload = wsgiinput
-        else:
-            # allow read to be called from a synchronous context
-            payload.read = synchronize(payload.read)
-            payload.read = spawn_greenlet_on_scope_error(payload.read)
-
-        environ = self.create_wsgi_environ(message, payload)
-        # add a reference to this for switching protocols
-        environ['async.protocol'] = self
-
-        response = self.create_wsgi_response(message)
-
-        riter = yield from spawn_greenlet(
-            self.wsgi,
-            environ,
-            response.start_response
-        )
-
-        resp = response.response
         try:
-            for item in riter:
-                if isinstance(item, asyncio.Future):
-                    item = yield from item
-                yield from resp.write(item)
+            while True:
+                block = yield from request.content.readany()
+                if not block:
+                    break
+                yield from body_buffer.write(block)
+            # Seek the body.
+            body, content_length = yield from body_buffer.get_body()
+            # Get the environ.
+            environ = self._get_environ(request, body, content_length)
+            environ['async.writer'] = request.writer
+            environ['async.protocol'] = request.protocol
+            status, reason, headers, body = yield from spawn_greenlet(
+                _run_application,
+                self._application,
+                environ,
+            )
+            # All done!
+            return Response(
+                status=status,
+                reason=reason,
+                headers=headers,
+                body=body,
+            )
 
-            yield from resp.write_eof()
         finally:
-            if hasattr(riter, 'close'):
-                riter.close()
-
-        if resp.keep_alive():
-            self.keep_alive(True)
-
-        self.log_access(
-            message, environ, response.response, time.time() - now)
-
-    def log_access(self, request, environ, response, time):
-        catoms = atoms(
-            response,
-            request,
-            environ,
-            datetime.timedelta(0, 0, time))
-        safe_atoms = self.logger.atoms_wrapper_class(catoms)
-        self.logger.access_log.info(
-            self.logger.cfg.access_log_format % safe_atoms)
+            yield from body_buffer.close()
 
 
-class AsyncGunicornWorker(AiohttpWorker):
+class AsyncGunicornWorker(GunicornWebWorker):
 
-    def factory(self, wsgi, *args):
-        proto = AiopyramidHttpServerProtocol(
-            wsgi,
+    def make_handler(self, app):
+        aio_app = Application()
+        aio_app.router.add_route(
+            "*",
+            "/{path_info:.*}",
+            AiopyramidWSGIHandler(
+                app,
+                loop=self.loop,
+            ),
+        )
+        access_log = self.log.access_log if self.cfg.accesslog else None
+        return aio_app.make_handler(
             loop=self.loop,
-            readpayload=True,
-            log=self.log,
-            keep_alive=self.cfg.keepalive,
-            access_log=self.log.access_log,
-            access_log_format=self.cfg.access_log_format)
-        return self.wrap_protocol(proto)
+            logger=self.log,
+            slow_request_timeout=self.cfg.timeout,
+            keepalive_timeout=self.cfg.keepalive,
+            access_log=access_log,
+            access_log_format=self._get_valid_log_format(
+                self.cfg.access_log_format))

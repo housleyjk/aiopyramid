@@ -105,7 +105,7 @@ class TestRunInGreenlet(unittest.TestCase):
             this = greenlet.getcurrent()
             future = asyncio.Future()
             message = 12
-            sub_task = asyncio.async(
+            sub_task = asyncio.ensure_future(
                 run_in_greenlet(this, future, _sample, message),
             )
             this.parent.switch(sub_task)
@@ -135,7 +135,7 @@ class TestRunInGreenlet(unittest.TestCase):
             this = greenlet.getcurrent()
             future = asyncio.Future()
             message = 12
-            sub_task = asyncio.async(run_in_greenlet(
+            sub_task = asyncio.ensure_future(run_in_greenlet(
                 this,
                 future,
                 _chain,
@@ -161,7 +161,7 @@ class TestRunInGreenlet(unittest.TestCase):
         def _greenlet():
             this = greenlet.getcurrent()
             future = asyncio.Future()
-            sub_task = asyncio.async(
+            sub_task = asyncio.ensure_future(
                 run_in_greenlet(this, future, _sample),
             )
             this.parent.switch(sub_task)

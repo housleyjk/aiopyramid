@@ -107,7 +107,7 @@ def synchronize(*args, strict=True):
                     return coroutine_func(*args, **kwargs)
             else:
                 future = asyncio.Future()
-                sub_task = asyncio.async(
+                sub_task = asyncio.ensure_future(
                     run_in_greenlet(
                         this,
                         future,

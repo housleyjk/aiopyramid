@@ -119,14 +119,14 @@ class WebsocketMapper(AsyncioMapperBase):
             def switch_protocols():
                 # TODO: Determine if there is a more standard way to do this
                 ws_protocol = websockets.WebSocketCommonProtocol()
-                transport = request.environ['async.writer'].transport
+                transport = request.environ['async.writer']._transport
 
                 http_protocol = request.environ['async.protocol']
                 http_protocol.connection_lost(None)
 
                 transport._protocol = ws_protocol
                 ws_protocol.connection_made(transport)
-                asyncio.async(_ensure_ws_close(ws_protocol))
+                asyncio.ensure_future(_ensure_ws_close(ws_protocol))
 
             response = SwitchProtocolsResponse(
                 request.environ,
