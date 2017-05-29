@@ -3,7 +3,11 @@ Changes
 
 .. :changelog:
 
-0.3.7 (2016-09-22)
+0.4.0 (2016-05-29)
+------------------
+    - Refactor to support latests aiohttp
+
+0.3.7 (2017-05-07)
 ------------------
     - Peg aiohttp dependency
 
