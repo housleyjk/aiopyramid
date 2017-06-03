@@ -47,7 +47,7 @@ setup(
     zip_safe=False,
     install_requires=requires,
     extras_require={
-        'gunicorn': ['gunicorn>=19.1.1', 'aiohttp>=1.0.0', 'aiohttp_wsgi', 'websockets'],
+        'gunicorn': ['gunicorn>=19.1.1', 'aiohttp>=2.0.0', 'aiohttp_wsgi>=0.7.0', 'websockets'],
     },
     license="BSD-derived (http://www.repoze.org/LICENSE.txt)",
     entry_points="""\
