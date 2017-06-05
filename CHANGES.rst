@@ -3,6 +3,10 @@ Changes
 
 .. :changelog:
 
+0.4.1 (2016-06-04)
+------------------
+    - Fix dependency mismatch for cases of aiohttp > 1.0 but < 2.0
+
 0.4.0 (2016-05-29)
 ------------------
     - Refactor to support latests aiohttp
