@@ -15,17 +15,17 @@ Getting Started
 
 ``Aiopyramid`` includes a scaffold that creates a "hello world" application,
 check it out. The scaffold is designed to work with either `gunicorn`_
-via a custom worker or `uWSGI`_ via the `uWSGI asyncio plugin`_.
-
-For example:
+via a custom worker or `uWSGI`_ via the `uWSGI asyncio plugin`_. We will be
+be using gunicorn and installing aiopyramid along with its defined gunicorn
+extras for this example:
 
 ::
 
-    pip install aiopyramid gunicorn
+    pip install aiopyramid[gunicorn] gunicorn
     pcreate -s aio_starter <project>
     cd <project>
-    python setup.py develop
-    pserve development.ini
+    pip install -e .
+    gunicorn --paste development.ini
 
 There is also a ``websocket`` scaffold `aio_websocket` for those who basic tools for setting up
 a ``websocket`` server.
