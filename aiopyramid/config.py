@@ -59,7 +59,7 @@ class CoroutineMapper(AsyncioMapperBase):
         view = super().__call__(view)
 
         if is_generator(original) or is_generator(
-                getattr(original, '__call__', None)
+            getattr(original, '__call__', None)
         ):
             view = asyncio.coroutine(view)
         elif not asyncio.iscoroutinefunction(original):
@@ -76,7 +76,7 @@ class ExecutorMapper(AsyncioMapperBase):
         if inspect.isclass(view):
             view = getattr(view, self.attr)
         if asyncio.iscoroutinefunction(view) or asyncio.iscoroutinefunction(
-                getattr(view, '__call__', None)
+            getattr(view, '__call__', None)
         ):
             raise ConfigurationError(
                 'Coroutine {} mapped to executor.'.format(view)
@@ -100,11 +100,11 @@ class CoroutineOrExecutorMapper(AsyncioMapperBase):
         view = super().__call__(view)
 
         if (
-                asyncio.iscoroutinefunction(original) or
-                is_generator(original) or
-                is_generator(
-                    getattr(original, '__call__', None)
-                )
+            asyncio.iscoroutinefunction(original) or
+            is_generator(original) or
+            is_generator(
+                getattr(original, '__call__', None)
+            )
         ):
             view = asyncio.coroutine(view)
             return self.run_in_coroutine_view(view)
