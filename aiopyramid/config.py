@@ -2,6 +2,7 @@
 This module provides view mappers for running views in asyncio.
 """
 import asyncio
+import inspect
 
 from pyramid.config.views import DefaultViewMapper
 from pyramid.exceptions import ConfigurationError
@@ -52,11 +53,13 @@ class AsyncioMapperBase(DefaultViewMapper):
 class CoroutineMapper(AsyncioMapperBase):
 
     def __call__(self, view):
+        if inspect.isclass(view):
+            view = getattr(view, self.attr)
         original = view
         view = super().__call__(view)
 
         if is_generator(original) or is_generator(
-            getattr(original, '__call__', None)
+                getattr(original, '__call__', None)
         ):
             view = asyncio.coroutine(view)
         elif not asyncio.iscoroutinefunction(original):
@@ -70,8 +73,10 @@ class CoroutineMapper(AsyncioMapperBase):
 class ExecutorMapper(AsyncioMapperBase):
 
     def __call__(self, view):
+        if inspect.isclass(view):
+            view = getattr(view, self.attr)
         if asyncio.iscoroutinefunction(view) or asyncio.iscoroutinefunction(
-            getattr(view, '__call__', None)
+                getattr(view, '__call__', None)
         ):
             raise ConfigurationError(
                 'Coroutine {} mapped to executor.'.format(view)
@@ -83,6 +88,8 @@ class ExecutorMapper(AsyncioMapperBase):
 class CoroutineOrExecutorMapper(AsyncioMapperBase):
 
     def __call__(self, view):
+        if inspect.isclass(view):
+            view = getattr(view, self.attr)
         original = view
         while asyncio.iscoroutinefunction(view):
             try:
@@ -93,11 +100,11 @@ class CoroutineOrExecutorMapper(AsyncioMapperBase):
         view = super().__call__(view)
 
         if (
-            asyncio.iscoroutinefunction(original) or
-            is_generator(original) or
-            is_generator(
-                getattr(original, '__call__', None)
-            )
+                asyncio.iscoroutinefunction(original) or
+                is_generator(original) or
+                is_generator(
+                    getattr(original, '__call__', None)
+                )
         ):
             view = asyncio.coroutine(view)
             return self.run_in_coroutine_view(view)
