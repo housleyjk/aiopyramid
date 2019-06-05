@@ -2,6 +2,7 @@
 This module provides view mappers for running views in asyncio.
 """
 import asyncio
+import inspect
 
 from pyramid.config.views import DefaultViewMapper
 from pyramid.exceptions import ConfigurationError
@@ -52,6 +53,8 @@ class AsyncioMapperBase(DefaultViewMapper):
 class CoroutineMapper(AsyncioMapperBase):
 
     def __call__(self, view):
+        if inspect.isclass(view):
+            view = getattr(view, self.attr)
         original = view
         view = super().__call__(view)
 
@@ -70,6 +73,8 @@ class CoroutineMapper(AsyncioMapperBase):
 class ExecutorMapper(AsyncioMapperBase):
 
     def __call__(self, view):
+        if inspect.isclass(view):
+            view = getattr(view, self.attr)
         if asyncio.iscoroutinefunction(view) or asyncio.iscoroutinefunction(
             getattr(view, '__call__', None)
         ):
@@ -83,6 +88,8 @@ class ExecutorMapper(AsyncioMapperBase):
 class CoroutineOrExecutorMapper(AsyncioMapperBase):
 
     def __call__(self, view):
+        if inspect.isclass(view):
+            view = getattr(view, self.attr)
         original = view
         while asyncio.iscoroutinefunction(view):
             try:
