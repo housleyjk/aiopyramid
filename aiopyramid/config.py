@@ -42,6 +42,10 @@ class AsyncioMapperBase(DefaultViewMapper):
             # since we are running in a new thread,
             # remove the old wsgi.file_wrapper for uwsgi
             request.environ.pop('wsgi.file_wrapper', None)
+
+            if not asyncio.iscoroutinefunction(view):
+                return view(context, request)
+
             exe = synchronizer(asyncio.get_event_loop().run_in_executor)
             return exe(None, view, context, request)
 
