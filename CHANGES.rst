@@ -3,6 +3,11 @@ Changes
 
 .. :changelog:
 
+0.4.2 (2019-06-18)
+------------------
+    - Add class methods support into view mappers
+    - Fix synchronous function call from executor view
+
 0.4.1 (2016-06-04)
 ------------------
     - Fix dependency mismatch for cases of aiohttp > 1.0 but < 2.0
