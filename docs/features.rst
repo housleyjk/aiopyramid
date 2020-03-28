@@ -306,7 +306,7 @@ that has :meth:`~aiopyramid.websocket.view.WebsocketConnectionView.on_message`,
 :meth:`~aiopyramid.websocket.view.WebsocketConnectionView.on_open`,
 and :meth:`~aiopyramid.websocket.view.WebsocketConnectionView.on_close` callbacks.
 Class-based websocket views also have a :meth:`~aiopyramid.websocket.view.WebsocketConnectionView.send` convenience method,
-otherwise the underyling ``ws`` may be accessed as :attr:`self.ws`.
+otherwise the underlying ``ws`` may be accessed as :attr:`self.ws`.
 Simply extend :class:`~aiopyramid.websocket.view.WebsocketConnectionView`
 specifying the correct :term:`view mapper` for your server either via the :attr:`__view_mapper__` attribute or the
 :func:`view_config <pyramid:pyramid.view.view_config>` decorator. The above example could be rewritten in a larger project, this time using `uWSGI`_,
@@ -331,7 +331,7 @@ as follows:
             yield from self.send(message)
 
 
-The underyling websocket implementations of `uWSGI`_ and `websockets`_ differ in how they pass on
+The underlying websocket implementations of `uWSGI`_ and `websockets`_ differ in how they pass on
 the WebSocket message. `uWSGI`_ always sends `bytes` even when the WebSocket frame indicates that
 the message is text, whereas `websockets`_ decodes text messages to `str`.
 `Aiopyramid` attempts to match the behavior of `websockets`_ by default, which means
