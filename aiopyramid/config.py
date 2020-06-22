@@ -39,27 +39,31 @@ class AsyncioMapperBase(DefaultViewMapper):
             # This must be done in a non-async context
             request.params.__getitem__ = request.params.__getitem__
 
-            try:
-                # since we are running in a new thread,
-                # remove the old wsgi.file_wrapper for uwsgi
-                request.environ.pop('wsgi.file_wrapper')
-            finally:
-                exe = synchronizer(asyncio.get_event_loop().run_in_executor)
-                return exe(None, view, context, request)
+            # since we are running in a new thread,
+            # remove the old wsgi.file_wrapper for uwsgi
+            request.environ.pop('wsgi.file_wrapper', None)
+
+            if not asyncio.iscoroutinefunction(view):
+                return view(context, request)
+
+            exe = synchronizer(asyncio.get_event_loop().run_in_executor)
+            return exe(None, view, context, request)
 
         return executor_view
 
+    def is_class_method_coroutine(self, view):
+        return inspect.isclass(view) and asyncio.iscoroutinefunction(getattr(view, self.attr))
 
 class CoroutineMapper(AsyncioMapperBase):
 
     def __call__(self, view):
-        if inspect.isclass(view):
-            view = getattr(view, self.attr)
         original = view
         view = super().__call__(view)
 
-        if is_generator(original) or is_generator(
-            getattr(original, '__call__', None)
+        if (
+            is_generator(original)
+            or is_generator(getattr(original, '__call__', None))
+            or (self.is_class_method_coroutine(original))
         ):
             view = asyncio.coroutine(view)
         elif not asyncio.iscoroutinefunction(original):
@@ -73,10 +77,10 @@ class CoroutineMapper(AsyncioMapperBase):
 class ExecutorMapper(AsyncioMapperBase):
 
     def __call__(self, view):
-        if inspect.isclass(view):
-            view = getattr(view, self.attr)
-        if asyncio.iscoroutinefunction(view) or asyncio.iscoroutinefunction(
-            getattr(view, '__call__', None)
+        if (
+            asyncio.iscoroutinefunction(view)
+            or asyncio.iscoroutinefunction(getattr(view, '__call__', None))
+            or self.is_class_method_coroutine(view)
         ):
             raise ConfigurationError(
                 'Coroutine {} mapped to executor.'.format(view)
@@ -88,8 +92,6 @@ class ExecutorMapper(AsyncioMapperBase):
 class CoroutineOrExecutorMapper(AsyncioMapperBase):
 
     def __call__(self, view):
-        if inspect.isclass(view):
-            view = getattr(view, self.attr)
         original = view
         while asyncio.iscoroutinefunction(view):
             try:
@@ -100,11 +102,10 @@ class CoroutineOrExecutorMapper(AsyncioMapperBase):
         view = super().__call__(view)
 
         if (
-            asyncio.iscoroutinefunction(original) or
-            is_generator(original) or
-            is_generator(
-                getattr(original, '__call__', None)
-            )
+            asyncio.iscoroutinefunction(original)
+            or is_generator(original)
+            or is_generator(getattr(original, '__call__', None))
+            or self.is_class_method_coroutine(original)
         ):
             view = asyncio.coroutine(view)
             return self.run_in_coroutine_view(view)
