@@ -133,7 +133,7 @@ route declared in the app constructor. It also assigns a :term:`renderer` to the
 render the data returned into the ``template/home.jinja`` template and return a response
 to the user. Line 2 wraps the view in a coroutine which differentiates it from a generator
 or native coroutine. Line 3 is the signature for the coroutine. ``Aiopyramid`` view mappers
-do not change the two default signarures for views, i.e. views that accept a request
+do not change the two default signatures for views, i.e. views that accept a request
 and views that accept a context and a request. On line 4, we retrieve a sleep parameter,
 from the request (the parameter can be either part of the querystring or the body). If
 the request doesn't include a sleep parameter, the view defaults to 0.1. We don't need to
@@ -165,7 +165,7 @@ of the view to accept a single websocket connection instead of a request. The co
 for communicating with the :term:`websocket` :meth:`recv`, :meth:`send`, and :meth:`close` that
 correspond to similar methods in the `websockets`_ library.
 
-This websocket view will run echoing the data it recieves until the connection is closed. On line 5 we use
+This websocket view will run echoing the data it receives until the connection is closed. On line 5 we use
 ``yield from`` to wait until a message is received. If the message is None, then we know that the websocket
 has closed and we break the loop to complete the echo coroutine. Otherwise, line 7 simply returns the same
 message back to the websocket. Very simple. In both cases when we need to perform some io we use ``yield from``
@@ -210,7 +210,7 @@ The ``port`` setting here is the port that we will use to access the application
 Setup
 .....
 
-The ``setup.py`` file makes the ``aiotutorial`` package easy to distirbute, and it is also a good way, although
+The ``setup.py`` file makes the ``aiotutorial`` package easy to distribute, and it is also a good way, although
 not the only good way, to manage dependencies for our project. Lines 18-21 list the Python packages that we need
 for this project.
 
@@ -283,7 +283,7 @@ limitations) and go to http://127.0.0.1:6543?sleep=10. The new browser should ta
 to load the page because our view is waiting for the value of ``sleep``. However, while that request is
 ongoing, you can refresh your first browser and see that the server is still able to fulfill requests.
 
-Congratulations! You have successfuly setup a highly configurable asynchronous server using ``Aiopyramid``!
+Congratulations! You have successfully setup a highly configurable asynchronous server using ``Aiopyramid``!
 
 .. note:: *Extra Credit*
 

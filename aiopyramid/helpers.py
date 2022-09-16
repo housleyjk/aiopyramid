@@ -58,7 +58,7 @@ def spawn_greenlet(func, *args, **kwargs):
 def run_in_greenlet(back, future, func, *args, **kwargs):
     """
     Wait for :term:`coroutine` func and switch back to the request greenlet
-    setting any result in the future or an Exception where approrpiate.
+    setting any result in the future or an Exception where appropriate.
 
     func is often a :term:`view callable`
     """
