@@ -87,7 +87,7 @@ Authentication
 
 Authentication poses a problem because the interface for
 :term:`authentication policies <authentication policy>` uses normal Python methods that the framework expects
-to call noramlly but at the same time it is usually necessary to perform some io to retrieve relevant information.
+to call normally but at the same time it is usually necessary to perform some io to retrieve relevant information.
 The built-in :term:`authentication policies <authentication policy>` generally accept a callback function that
 delegates retrieving :term:`principals <principal>` to the application, but this callback function is also expected
 to be called in the regular fashion. So, it is necessary to use a :term:`synchronized coroutine` as a callback
@@ -353,7 +353,7 @@ uWSGI Special Note
 
 ``Aiopyramid`` uses a special :class:`~aiopyramid.websocket.exceptions.WebsocketClosed` exception
 to disconnect a :term:`greenlet` after a :term:`websocket`
-has been closed. This exception will be visible in log ouput when using `uWSGI`_. In order to squelch this
+has been closed. This exception will be visible in log output when using `uWSGI`_. In order to squelch this
 message, wrap the wsgi application in the :func:`~aiopyramid.websocket.helpers.ignore_websocket_closed` middleware
 in your application's constructor like so:
 
