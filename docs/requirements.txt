@@ -1,4 +1,4 @@
-aiohttp==3.7.4
+aiohttp==3.8.5
 aiopyramid>=0.1.0
 greenlet==0.4.2
 gunicorn==19.5.0
